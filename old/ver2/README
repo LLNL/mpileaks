@@ -1,0 +1,4 @@
+
+This version uses a Request2Callpath data structure (not a stack of callpaths). 
+It does not implement persistent communication, but uses a template class that 
+implements alloc and free for any type of handle. 

@@ -1,0 +1,132 @@
+
+===================================================================
+Introduction
+===================================================================
+
+MPILEAKS is a library to detect memory leaks from MPI objects. Using
+the MPI profiling interface, it keeps track of all the MPI calls that
+"allocate" and "free" objects matching allocate requests with free
+requests. At the end of the program, through MPI_Finalize or before
+completion using MPI_PControl, any unmatched requests are gathered,
+aggregated, and reported. 
+
+MPILEAKS displays the stack trace where the leak occurred. The trace
+includes file name and line number of the unmatched calls. Since many
+MPI tasks may have the same leak, MPILEAKS displays a count
+associated with each stack trace that includes all the tasks in the
+job with the same leak. To get stack traces, MPILEAKS internally
+uses Todd Gamblin's Callpath class. 
+
+It is advised that users build their programs with '-g' option. Note,
+however, that users do not need to recompile their programs with
+MPILEAKS to use it, simply, at run time, allow the system to load
+MPILEAKS before the MPI library (see using MPILEAKS below). 
+
+Currently, the tool detects leaks from the following function types: 
+- MPI file I/O
+- MPI non-blocking communication
+- MPI persistent communication 
+
+
+===================================================================
+Building and using MPILEAKS
+===================================================================
+
+1. Edit the files:  
+   defs.mk 
+   src/Makefile
+
+2. Create libmpileaks.so in the path specified by 'defs.mk': 
+   cd src; make 
+
+3. To build a simple MPI program with leaks: 
+   cd examples; make 
+   Note that it is not necessary to link the program with the mpileaks
+   library. Thus, rebuilding an MPI program to use this tool is not
+   necessary, simply replace your 'srun' command with
+   'scripts/srun-mpileaks' (see next step). 
+
+4. To run the example: 
+   cd examples; make run
+
+
+===================================================================
+Extending MPILEAKS to handle other types
+===================================================================
+   
+MPILEAKS is really a framework to detect mismatched function calls. As
+such it can be extended to detect other types of leaks. Using this
+framework is simple: (a) register the handle type used to uniquely
+identify the function calls of interest; and (b) use the provided
+functions 'allocate' and 'free' to associate a function call as
+allocating or freeing resources. We provide an example below that,
+for any given program, identifies MPI open files that are not closed.  
+
+--
+#include "mpi.h"
+#include "mpileaks.h"                 /* Handle2Callpath */ 
+
+/*
+ * Instantiate class with the specific handle-type that identifies
+ * one function call from another (MPI_File in this case). 
+ * Define 'is_handle_null' for your specific handle type. 
+ */
+ 
+static class MPI_File2Callpath : public Handle2Callpath<MPI_File>
+{
+public: 
+  bool is_handle_null(MPI_File handle) {
+    return (handle == MPI_FILE_NULL) ? 1 : 0; 
+  }
+} File2Callpath; 
+
+
+/* 
+ * Associate function calls as "allocate" or "free" functions. 
+ */ 
+
+int MPI_File_open(MPI_Comm comm, char *filename, int amode, 
+                  MPI_Info info, MPI_File *fh)
+{
+  int rc = PMPI_File_open(comm, filename, amode, info, fh); 
+  File2Callpath.allocate(*fh); 
+  return rc; 
+}
+
+
+int MPI_File_close(MPI_File *fh) 
+{
+  MPI_File handle_copy = *fh; 
+  
+  int rc = PMPI_File_close(fh);  
+  File2Callpath.free(handle_copy); 
+  
+  return rc; 
+}
+
+
+===================================================================
+Future Work
+===================================================================
+
+1. Provide a graphical interface showing the callpath tree. Each
+   node (function call) shows the number of leaks detected across all
+   MPI tasks. May need to talk to John G. about ToolGear, or Greg
+   L. about Stat's graphical interface. 
+
+2. Provide the following extensions: 
+   - Derived data-types
+   - Communicators
+   - Groups
+   - Windows
+
+3. Install in /usr/global/tools/mpileaks
+
+4. Measure MPILEAKS overhead for large programs in terms of execution
+   time and memory usage. 
+
+5. Ask a selected set of users to test the tool and get feedback. 
+
+6. Document any leaks found in real applications. 
+
+7. Write it up into a tech report / paper. 
