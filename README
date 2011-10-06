@@ -119,6 +119,7 @@ Future Work
    - Communicators
    - Groups
    - Windows
+   - Info objects
 
 3. Install in /usr/global/tools/mpileaks
 
@@ -130,3 +131,4 @@ Future Work
 6. Document any leaks found in real applications. 
 
 7. Write it up into a tech report / paper. 
+
