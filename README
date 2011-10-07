@@ -115,11 +115,11 @@ Future Work
    L. about Stat's graphical interface. 
 
 2. Provide the following extensions: 
-   - Derived data-types
    - Communicators
-   - Groups
    - Windows
    - Info objects
+   - Attribute keyvals
+   - Errhandlers
 
 3. Install in /usr/global/tools/mpileaks
 
