@@ -100,7 +100,7 @@ int MPI_Type_create_hindexed(int count, int array_of_blocklengths[],
 			     MPI_Aint array_of_displacements[], MPI_Datatype oldtype, 
 			     MPI_Datatype *newtype)
 {
-  int rc = PMPI_Type_create_hindexed(count, array_of_blocklenghts, array_of_displacements,
+  int rc = PMPI_Type_create_hindexed(count, array_of_blocklengths, array_of_displacements,
 				     oldtype, newtype);
   Datatype2Callpath.allocate(*newtype); 
   return rc; 
