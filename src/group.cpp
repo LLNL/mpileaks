@@ -14,7 +14,7 @@ static class MPI_Group2Callpath : public Handle2Callpath<MPI_Group>
 {
 public: 
   bool is_handle_null(MPI_Group handle) {
-    return (handle == MPI_GROUP_NULL) ? 1 : 0; 
+    return (handle == MPI_GROUP_NULL || handle == MPI_GROUP_EMPTY) ? 1 : 0; 
   }
 } Group2Callpath; 
 
