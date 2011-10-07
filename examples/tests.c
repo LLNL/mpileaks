@@ -81,7 +81,18 @@ void fileio(int myrank, int np)
 }
 
 
+void datatypes(int myrank, int np)
+{
+  MPI_Datatype type1, type2; 
+  MPI_Type_contiguous(5, MPI_INT, &type1); 
+  MPI_Type_commit(&type1); 
 
+  MPI_Type_vector(3, 5, 4, type1, &type2); 
+  MPI_Type_commit(&type2); 
+
+  MPI_Type_free(&type1); 
+  // MPI_Type_free(&type2); 
+}
 
 /*******************************************************
  * Main
@@ -96,6 +107,7 @@ int main(int argc, char *argv[])
   MPI_Comm_rank(MPI_COMM_WORLD, &myrank); 
   MPI_Comm_size(MPI_COMM_WORLD, &np); 
 
+  datatypes(myrank, np); 
   persistent(myrank, np); 
   fileio(myrank, np); 
   sendrecv(myrank, np); 
