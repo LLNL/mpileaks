@@ -94,6 +94,7 @@ void datatypes(int myrank, int np)
   // MPI_Type_free(&type2); 
 }
 
+
 /* 
    Test whether the following are true: 
    - free groups with handle = MPI_GROUP_ENTRY 
@@ -111,7 +112,7 @@ void datatypes(int myrank, int np)
    grp5 is MPI_GROUP_EMPTY
    --
 */ 
-void groups(int myrank, int np)
+void group_properties(int myrank, int np)
 {
   MPI_Group grp1, grp2, grp3, grp4, grp5, grp6, grp7;
   MPI_Comm comm3; 
@@ -166,6 +167,21 @@ void groups(int myrank, int np)
 }
 
 
+void groups(int myrank, int np)
+{
+  MPI_Group group1, group2, group3; 
+  MPI_Comm_group(MPI_COMM_WORLD, &group1);
+
+  int ranks[2] = {0,1};
+  MPI_Group_incl(group1, 1, &ranks[0], &group2);
+  MPI_Group_excl(group1, 1, &ranks[0], &group3);
+
+  MPI_Group_free(&group1); 
+  // MPI_Group_free(&group2); 
+  // MPI_Group_free(&group3); 
+}
+
+
 /*******************************************************
  * Main
  *******************************************************/
@@ -179,14 +195,15 @@ int main(int argc, char *argv[])
   MPI_Comm_rank(MPI_COMM_WORLD, &myrank); 
   MPI_Comm_size(MPI_COMM_WORLD, &np); 
 
-  groups(myrank, np); 
-#if 0
+#if 1
+  group_properties(myrank, np); 
+#endif 
+
+  groups(myrank, np);
   datatypes(myrank, np); 
   persistent(myrank, np); 
   fileio(myrank, np); 
   sendrecv(myrank, np); 
-#endif  
-
   MPI_Finalize(); 
 
   return 0; 

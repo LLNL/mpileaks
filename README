@@ -114,12 +114,27 @@ Future Work
    MPI tasks. May need to talk to John G. about ToolGear, or Greg
    L. about Stat's graphical interface. 
 
-2. Provide the following extensions: 
-   - Derived data-types
+2. Provide the following extensions:
+   x ==> currently supported
+   - ==> still todo
+
+   - Request objects
+     x pt2pt
+     x persistent pt2pt
+     x nonblocking file IO
+     - generalized requests
+   x Datatypes
+   x Groups
    - Communicators
-   - Groups
+     - dup / split / create
+     - merge
+     - topology
+     - dynamic processes
+   - User-defined reduction ops
    - Windows
    - Info objects
+   - Attribute keyvals
+   - Errhandlers
 
 3. Install in /usr/global/tools/mpileaks
 

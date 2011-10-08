@@ -26,7 +26,7 @@ public:
 
 
 /************************************************
- * MPI calls 
+ * MPI datatype allocation calls 
  ************************************************/
 
 int MPI_Type_contiguous(int count, MPI_Datatype oldtype, MPI_Datatype *newtype)
@@ -44,6 +44,15 @@ int MPI_Type_vector(int count, int blocklength, int stride, MPI_Datatype oldtype
   return rc; 
 }
 
+/* deprecated, but still available starting with MPI-2.0 */
+int MPI_Type_hvector(int count, int blocklength, MPI_Aint stride, MPI_Datatype oldtype, 
+		     MPI_Datatype *newtype)
+{
+  int rc = PMPI_Type_hvector(count, blocklength, stride, oldtype, newtype);
+  Datatype2Callpath.allocate(*newtype); 
+  return rc; 
+}
+
 int MPI_Type_indexed(int count, int *array_of_blocklengths, int *array_of_displacements, 
 		     MPI_Datatype oldtype, MPI_Datatype *newtype)
 {
@@ -53,28 +62,7 @@ int MPI_Type_indexed(int count, int *array_of_blocklengths, int *array_of_displa
   return rc; 
 }
 
-int MPI_Type_free(MPI_Datatype *datatype)
-{
-  MPI_Datatype handle_copy = *datatype; 
-  int rc = PMPI_Type_free(datatype); 
-  Datatype2Callpath.free(handle_copy); 
-  return rc; 
-  
-}
-
-#if MPI_VERSION == 1
-/************************************************
- * MPI VERSION 1 calls 
- ************************************************/
-
-int MPI_Type_hvector(int count, int blocklength, MPI_Aint stride, MPI_Datatype oldtype, 
-		     MPI_Datatype *newtype)
-{
-  int rc = PMPI_Type_hvector(count, blocklength, stride, oldtype, newtype);
-  Datatype2Callpath.allocate(*newtype); 
-  return rc; 
-}
-
+/* deprecated, but still available starting with MPI-2.0 */
 int MPI_Type_hindexed(int count, int *array_of_blocklengths, MPI_Aint *array_of_displacements, 
 		      MPI_Datatype oldtype, MPI_Datatype *newtype)
 {
@@ -84,6 +72,7 @@ int MPI_Type_hindexed(int count, int *array_of_blocklengths, MPI_Aint *array_of_
   return rc; 
 }
 
+/* deprecated, but still available starting with MPI-2.0 */
 int MPI_Type_struct(int count, int *array_of_blocklengths, MPI_Aint *array_of_displacements, 
 		    MPI_Datatype *array_of_types, MPI_Datatype *newtype)
 {
@@ -93,9 +82,10 @@ int MPI_Type_struct(int count, int *array_of_blocklengths, MPI_Aint *array_of_di
   return rc; 
 }
 
-#else
+#if MPI_VERSION > 1
 /************************************************
  * MPI VERSION >1 calls 
+ * introduced in MPI-2.0 or later
  ************************************************/
 
 int MPI_Type_create_hvector(int count, int blocklength, MPI_Aint stride,
@@ -110,7 +100,7 @@ int MPI_Type_create_hindexed(int count, int array_of_blocklengths[],
 			     MPI_Aint array_of_displacements[], MPI_Datatype oldtype, 
 			     MPI_Datatype *newtype)
 {
-  int rc = PMPI_Type_create_hindexed(count, array_of_blocklenghts, array_of_displacements,
+  int rc = PMPI_Type_create_hindexed(count, array_of_blocklengths, array_of_displacements,
 				     oldtype, newtype);
   Datatype2Callpath.allocate(*newtype); 
   return rc; 
@@ -172,3 +162,15 @@ int MPI_Type_dup(MPI_Datatype type, MPI_Datatype *newtype)
 
 #endif  
 
+/************************************************
+ * MPI datatype free call
+ ************************************************/
+
+int MPI_Type_free(MPI_Datatype *datatype)
+{
+  MPI_Datatype handle_copy = *datatype; 
+  int rc = PMPI_Type_free(datatype); 
+  Datatype2Callpath.free(handle_copy); 
+  return rc; 
+  
+}

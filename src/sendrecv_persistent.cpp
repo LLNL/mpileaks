@@ -175,6 +175,60 @@ int MPI_Startall(int count, MPI_Request *array_of_requests)
 }
 
 
+#if MPI_VERSION > 1
+/************************************************
+ * File I/O calls
+ ************************************************/
+
+int MPI_File_iread_at(MPI_File fh, MPI_Offset offset, void *buf, int count,
+                      MPI_Datatype datatype, MPI_Request *request)
+{
+  int rc = PMPI_File_iread_at(fh, offset, buf, count, datatype, request);
+  Request2Stack.allocate(*request);
+  return rc;
+}
+
+int MPI_File_iwrite_at(MPI_File fh, MPI_Offset offset, void *buf, int count,
+                       MPI_Datatype datatype, MPI_Request *request)
+{
+  int rc = PMPI_File_iwrite_at(fh, offset, buf, count, datatype, request);
+  Request2Stack.allocate(*request);
+  return rc;
+}
+
+int MPI_File_iread(MPI_File fh, void *buf, int count,
+                   MPI_Datatype datatype, MPI_Request *request)
+{
+  int rc = PMPI_File_iread(fh, buf, count, datatype, request);
+  Request2Stack.allocate(*request);
+  return rc;
+}
+
+int MPI_File_iwrite(MPI_File fh, void *buf, int count,
+                   MPI_Datatype datatype, MPI_Request *request)
+{
+  int rc = PMPI_File_iwrite(fh, buf, count, datatype, request);
+  Request2Stack.allocate(*request);
+  return rc;
+}
+
+int MPI_File_iread_shared(MPI_File fh, void *buf, int count,
+                          MPI_Datatype datatype, MPI_Request *request)
+{
+  int rc = PMPI_File_iread_shared(fh, buf, count, datatype, request);
+  Request2Stack.allocate(*request);
+  return rc;
+}
+
+int MPI_File_iwrite_shared(MPI_File fh, void *buf, int count,
+                           MPI_Datatype datatype, MPI_Request *request)
+{
+  int rc = PMPI_File_iwrite_shared(fh, buf, count, datatype, request);
+  Request2Stack.allocate(*request);
+  return rc;
+}
+#endif
+
 /************************************************
  * Completion calls
  ************************************************/
