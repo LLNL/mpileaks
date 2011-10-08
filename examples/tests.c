@@ -94,6 +94,78 @@ void datatypes(int myrank, int np)
   // MPI_Type_free(&type2); 
 }
 
+/* 
+   Test whether the following are true: 
+   - free groups with handle = MPI_GROUP_ENTRY 
+   - duplicate groups return the same MPI_Group value
+   This seems to be true for MVAPICH 1 and 2.
+   Example output: 
+   --
+   grp1 and grp2 are the same
+   grp3 and grp4 differ
+   grp5 is MPI_GROUP_EMPTY
+   grp6 and grp7 are the same
+   1: comm3 is NULL
+   grp1 and grp2 are the same
+   grp3 and grp4 differ
+   grp5 is MPI_GROUP_EMPTY
+   --
+*/ 
+void groups(int myrank, int np)
+{
+  MPI_Group grp1, grp2, grp3, grp4, grp5, grp6, grp7;
+  MPI_Comm comm3; 
+  int process_ranks[1] = {0}; 
+
+  MPI_Comm_group(MPI_COMM_WORLD, &grp1); 
+  MPI_Comm_group(MPI_COMM_WORLD, &grp2); 
+  
+  MPI_Group_incl(grp1, 1, process_ranks, &grp3); 
+  MPI_Group_incl(grp1, 1, process_ranks, &grp4); 
+  MPI_Group_incl(grp1, 0, process_ranks, &grp5); 
+
+  MPI_Comm_create(MPI_COMM_WORLD, grp3, &comm3); 
+  if (comm3 == MPI_COMM_NULL)
+    printf("%d: comm3 is NULL\n", myrank); 
+  else {
+    MPI_Comm_group(comm3, &grp6); 
+    MPI_Comm_group(comm3, &grp7); 
+  }
+
+  if (grp1 == grp2) 
+    printf("grp1 and grp2 are the same\n"); 
+  else
+    printf("grp1 and grp2 differ\n"); 
+
+  if (grp3 == grp4) 
+    printf("grp3 and grp4 are the same\n"); 
+  else
+    printf("grp3 and grp4 differ\n"); 
+
+  if (grp5 == MPI_GROUP_EMPTY)
+    printf("grp5 is MPI_GROUP_EMPTY\n"); 
+  else
+    printf("grp5 is not MPI_GROUP_EMPTY\n"); 
+
+  if (comm3 != MPI_COMM_NULL) {
+    if (grp6 == grp7) 
+      printf("grp6 and grp7 are the same\n"); 
+    else
+      printf("grp6 and grp7 differ\n"); 
+  }
+
+  MPI_Group_free(&grp1); 
+  MPI_Group_free(&grp2); 
+  MPI_Group_free(&grp3); 
+  MPI_Group_free(&grp4); 
+  MPI_Group_free(&grp5); 
+  if (comm3 != MPI_COMM_NULL) {
+    MPI_Group_free(&grp6); 
+    MPI_Group_free(&grp7); 
+  }
+}
+
+
 /*******************************************************
  * Main
  *******************************************************/
@@ -107,11 +179,14 @@ int main(int argc, char *argv[])
   MPI_Comm_rank(MPI_COMM_WORLD, &myrank); 
   MPI_Comm_size(MPI_COMM_WORLD, &np); 
 
+  groups(myrank, np); 
+#if 0
   datatypes(myrank, np); 
   persistent(myrank, np); 
   fileio(myrank, np); 
   sendrecv(myrank, np); 
-  
+#endif  
+
   MPI_Finalize(); 
 
   return 0; 
