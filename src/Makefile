@@ -26,12 +26,7 @@ LEAKS_INCLUDES = -I$(CALLPATH)/include
 LEAKS_INCLUDES += -I$(CHAOS4IB)/include
 
 TESTS = 
-LEAKS_OBJS = mpileaks.o fileio.o datatype.o group.o
-ifdef PERSISTENT_COMM
-LEAKS_OBJS += sendrecv_persistent.o
-else
-LEAKS_OBJS += sendrecv.o
-endif 
+LEAKS_OBJS = mpileaks.o request.o fileio.o datatype.o group.o
 
 
 all: $(MPILEAKS_LIB) $(TESTS)
@@ -40,14 +35,11 @@ all: $(MPILEAKS_LIB) $(TESTS)
 mpileaks.o: mpileaks.cpp 
 	$(CC) $(OPT) $(LEAKS_FLAGS) $(LEAKS_INCLUDES) -c -o $@ mpileaks.cpp
 
-sendrecv.o: sendrecv.cpp mpileaks.h
-	$(CC) $(OPT) $(LEAKS_FLAGS) $(LEAKS_INCLUDES) -c -o $@ sendrecv.cpp
-
 fileio.o: fileio.cpp mpileaks.h
 	$(CC) $(OPT) $(LEAKS_FLAGS) $(LEAKS_INCLUDES) -c -o $@ fileio.cpp
 
-sendrecv_persistent.o: sendrecv_persistent.cpp mpileaks.h
-	$(CC) $(OPT) $(LEAKS_FLAGS) $(LEAKS_INCLUDES) -c -o $@ sendrecv_persistent.cpp
+request.o: request.cpp mpileaks.h
+	$(CC) $(OPT) $(LEAKS_FLAGS) $(LEAKS_INCLUDES) -c -o $@ request.cpp
 
 datatype.o: datatype.cpp mpileaks.h
 	$(CC) $(OPT) $(LEAKS_FLAGS) $(LEAKS_INCLUDES) -c -o $@ datatype.cpp
