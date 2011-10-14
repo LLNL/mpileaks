@@ -125,11 +125,11 @@ Future Work
      - generalized requests
    x Datatypes
    x Groups
-   - Communicators
-     - dup / split / create
-     - merge
-     - topology
-     - dynamic processes
+   x Communicators
+     x dup / split / create
+     x merge
+     x topology
+     x dynamic processes
    - User-defined reduction ops
    - Windows
    - Info objects
@@ -146,4 +146,3 @@ Future Work
 6. Document any leaks found in real applications. 
 
 7. Write it up into a tech report / paper. 
-
