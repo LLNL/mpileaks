@@ -182,6 +182,19 @@ void groups(int myrank, int np)
 }
 
 
+void comms(int myrank, int np)
+{
+  MPI_Comm comm1, comm2, comm3; 
+  MPI_Comm_dup(MPI_COMM_WORLD, &comm1);
+  MPI_Comm_dup(MPI_COMM_WORLD, &comm2);
+  MPI_Comm_split(MPI_COMM_WORLD, myrank, myrank, &comm3);
+
+  //MPI_Comm_free(&comm1); 
+  // MPI_Comm_free(&comm2); 
+  // MPI_Comm_free(&comm3); 
+}
+
+
 /*******************************************************
  * Main
  *******************************************************/
@@ -199,6 +212,7 @@ int main(int argc, char *argv[])
   group_properties(myrank, np); 
 #endif 
 
+  comms(myrank, np);
   groups(myrank, np);
   datatypes(myrank, np); 
   persistent(myrank, np); 

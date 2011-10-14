@@ -18,7 +18,8 @@ STACKWALKER = $(TOOLS)/dyninst/stackwalker/chaos_4_x86_64_ib/stackwalker-2.0
 # version with callpaths is used. 
 PERSISTENT_COMM = 1
 
-CC = mpig++
+#CC = mpig++
+CC = mpicxx
 OPT = -Wall -Werror
 LEAKS_FLAGS = -g -O0 -fPIC
 
@@ -26,7 +27,7 @@ LEAKS_INCLUDES = -I$(CALLPATH)/include
 LEAKS_INCLUDES += -I$(CHAOS4IB)/include
 
 TESTS = 
-LEAKS_OBJS = mpileaks.o request.o fileio.o datatype.o group.o
+LEAKS_OBJS = mpileaks.o request.o fileio.o datatype.o group.o comm.o
 
 
 all: $(MPILEAKS_LIB) $(TESTS)
@@ -46,6 +47,9 @@ datatype.o: datatype.cpp mpileaks.h
 
 group.o: group.cpp mpileaks.h
 	$(CC) $(OPT) $(LEAKS_FLAGS) $(LEAKS_INCLUDES) -c -o $@ group.cpp
+
+comm.o: comm.cpp mpileaks.h
+	$(CC) $(OPT) $(LEAKS_FLAGS) $(LEAKS_INCLUDES) -c -o $@ comm.cpp
 
 $(MPILEAKS_LIB): $(LEAKS_OBJS)
 	$(CC) $(LEAKS_FLAGS) -shared -Wl,-soname,$(MPILEAKS_LIB).1 -o $@ $(LEAKS_OBJS) \
