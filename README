@@ -146,3 +146,17 @@ Future Work
 6. Document any leaks found in real applications. 
 
 7. Write it up into a tech report / paper. 
+
+8. Experience
+
+* 2011-08-02 David Larson
+Fortran code, was calling MPI_Waitall to wait for 4 requests in an array of 8,
+but was accidentally waiting on the wrong 4.
+
+Initially had trouble because MPI was overriding a signal that stackwalker needed
+which was set when Callpath runtime was initialized.  Fixed by initializaing runtime
+after MPI_Init.
+
+* 2011-10-05 Britton Olsen
+Fortran code, had MPI_Isend without matching wait call.
+Also identified two leaked groups in MPI itself within MPI_Comm_create.
