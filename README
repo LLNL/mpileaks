@@ -130,11 +130,13 @@ Future Work
      x merge
      x topology
      x dynamic processes
-   - User-defined reduction ops
+   x User-defined reduction ops
+   x Files
    - Windows
    - Info objects
-   - Attribute keyvals
-   - Errhandlers
+   x Attribute keyvals
+   x Errhandlers (need example)
+   - Memory
 
 3. Install in /usr/global/tools/mpileaks
 

@@ -18,8 +18,7 @@ STACKWALKER = $(TOOLS)/dyninst/stackwalker/chaos_4_x86_64_ib/stackwalker-2.0
 # version with callpaths is used. 
 PERSISTENT_COMM = 1
 
-#CC = mpig++
-CC = mpicxx
+CC = mpig++
 OPT = -Wall -Werror
 LEAKS_FLAGS = -g -O0 -fPIC
 
@@ -27,7 +26,7 @@ LEAKS_INCLUDES = -I$(CALLPATH)/include
 LEAKS_INCLUDES += -I$(CHAOS4IB)/include
 
 TESTS = 
-LEAKS_OBJS = mpileaks.o request.o fileio.o datatype.o group.o comm.o
+LEAKS_OBJS = mpileaks.o comm.o datatype.o errhandler.o fileio.o group.o keyval.o op.o request.o
 
 
 all: $(MPILEAKS_LIB) $(TESTS)
@@ -36,20 +35,30 @@ all: $(MPILEAKS_LIB) $(TESTS)
 mpileaks.o: mpileaks.cpp 
 	$(CC) $(OPT) $(LEAKS_FLAGS) $(LEAKS_INCLUDES) -c -o $@ mpileaks.cpp
 
-fileio.o: fileio.cpp mpileaks.h
-	$(CC) $(OPT) $(LEAKS_FLAGS) $(LEAKS_INCLUDES) -c -o $@ fileio.cpp
-
-request.o: request.cpp mpileaks.h
-	$(CC) $(OPT) $(LEAKS_FLAGS) $(LEAKS_INCLUDES) -c -o $@ request.cpp
+comm.o: comm.cpp mpileaks.h
+	$(CC) $(OPT) $(LEAKS_FLAGS) $(LEAKS_INCLUDES) -c -o $@ comm.cpp
 
 datatype.o: datatype.cpp mpileaks.h
 	$(CC) $(OPT) $(LEAKS_FLAGS) $(LEAKS_INCLUDES) -c -o $@ datatype.cpp
 
+errhandler.o: errhandler.cpp mpileaks.h
+	$(CC) $(OPT) $(LEAKS_FLAGS) $(LEAKS_INCLUDES) -c -o $@ errhandler.cpp
+
+fileio.o: fileio.cpp mpileaks.h
+	$(CC) $(OPT) $(LEAKS_FLAGS) $(LEAKS_INCLUDES) -c -o $@ fileio.cpp
+
 group.o: group.cpp mpileaks.h
 	$(CC) $(OPT) $(LEAKS_FLAGS) $(LEAKS_INCLUDES) -c -o $@ group.cpp
 
-comm.o: comm.cpp mpileaks.h
-	$(CC) $(OPT) $(LEAKS_FLAGS) $(LEAKS_INCLUDES) -c -o $@ comm.cpp
+keyval.o: keyval.cpp mpileaks.h
+	$(CC) $(OPT) $(LEAKS_FLAGS) $(LEAKS_INCLUDES) -c -o $@ keyval.cpp
+
+op.o: op.cpp mpileaks.h
+	$(CC) $(OPT) $(LEAKS_FLAGS) $(LEAKS_INCLUDES) -c -o $@ op.cpp
+
+request.o: request.cpp mpileaks.h
+	$(CC) $(OPT) $(LEAKS_FLAGS) $(LEAKS_INCLUDES) -c -o $@ request.cpp
+
 
 $(MPILEAKS_LIB): $(LEAKS_OBJS)
 	$(CC) $(LEAKS_FLAGS) -shared -Wl,-soname,$(MPILEAKS_LIB).1 -o $@ $(LEAKS_OBJS) \

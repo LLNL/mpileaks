@@ -95,6 +95,60 @@ void datatypes(int myrank, int np)
 }
 
 
+void test_errhandler(MPI_Comm *comm, int *errcode, ...)
+{
+  *errcode = 1;
+  if (*comm == MPI_COMM_WORLD) {
+    *errcode = 7;
+  }
+}
+
+
+void errhandlers(int myrank, int np)
+{
+  MPI_Errhandler errhandler1, errhandler2;
+  MPI_Errhandler_create(test_errhandler, &errhandler1); 
+  MPI_Errhandler_create(test_errhandler, &errhandler2); 
+  MPI_Errhandler_free(&errhandler1);
+  //MPI_Errhandler_free(&errhandler2);
+}
+
+
+void keyvals(int myrank, int np)
+{
+  int keyval1, keyval2;
+  void* extra_state1 = NULL;
+  void* extra_state2 = NULL;
+  MPI_Keyval_create(MPI_NULL_COPY_FN, MPI_NULL_DELETE_FN, &keyval1, &extra_state1);
+  MPI_Keyval_create(MPI_NULL_COPY_FN, MPI_NULL_DELETE_FN, &keyval2, &extra_state2);
+  //MPI_Keyval_free(&keyval1);
+  MPI_Keyval_free(&keyval2);
+}
+
+
+// example user-defined reduction function
+void test_user_defined_op_int_sum(void* in, void* inout, int* len, MPI_Datatype* datatype)
+{
+  int i;
+  int* a = (int*) in;
+  int* b = (int*) inout;
+  for (i=0; i < *len; i++) {
+    int result = a[i] + b[i];
+    b[i] = result;
+  }
+}
+
+
+void ops(int myrank, int np)
+{
+  MPI_Op op1, op2;
+  MPI_Op_create(test_user_defined_op_int_sum, 0, &op1);
+  MPI_Op_create(test_user_defined_op_int_sum, 0, &op2);
+  MPI_Op_free(&op1);
+  //MPI_Op_free(&op2);
+}
+
+
 /* 
    Test whether the following are true: 
    - free groups with handle = MPI_GROUP_ENTRY 
@@ -213,11 +267,15 @@ int main(int argc, char *argv[])
 #endif 
 
   comms(myrank, np);
-  groups(myrank, np);
   datatypes(myrank, np); 
-  persistent(myrank, np); 
+  errhandlers(myrank, np);
   fileio(myrank, np); 
+  groups(myrank, np);
+  keyvals(myrank, np);
+  persistent(myrank, np); 
   sendrecv(myrank, np); 
+  ops(myrank, np);
+
   MPI_Finalize(); 
 
   return 0; 
