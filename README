@@ -136,7 +136,8 @@ Future Work
    - Info objects
    x Attribute keyvals
    x Errhandlers (need example)
-   - Memory
+   x Memory
+   - Ports
 
 3. Install in /usr/global/tools/mpileaks
 
@@ -162,3 +163,6 @@ after MPI_Init.
 * 2011-10-05 Britton Olsen
 Fortran code, had MPI_Isend without matching wait call.
 Also identified two leaked groups in MPI itself within MPI_Comm_create.
+
+PROBLEMS
+* tests dies with an INVALID DATATYPE error when using mvapich2-gnu-debug-1.7

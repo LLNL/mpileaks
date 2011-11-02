@@ -139,6 +139,24 @@ void test_user_defined_op_int_sum(void* in, void* inout, int* len, MPI_Datatype*
 }
 
 
+void mems(int myrank, int np)
+{
+#if MPI_VERSION > 1
+/************************************************
+ * MPI VERSION >1 calls 
+ * introduced in MPI-2.0 or later
+ ************************************************/
+
+  MPI_Aint size = 1024;
+  void *buf1, *buf2;
+  MPI_Alloc_mem(size, MPI_INFO_NULL, &buf1);
+  MPI_Alloc_mem(size, MPI_INFO_NULL, &buf2);
+  MPI_Free_mem(buf1);
+  //MPI_Free_mem(buf2);
+#endif
+}
+
+
 void ops(int myrank, int np)
 {
   MPI_Op op1, op2;
@@ -275,6 +293,7 @@ int main(int argc, char *argv[])
   persistent(myrank, np); 
   sendrecv(myrank, np); 
   ops(myrank, np);
+  mems(myrank, np);
 
   MPI_Finalize(); 
 
