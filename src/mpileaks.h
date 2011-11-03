@@ -7,8 +7,9 @@
 
 using namespace std; 
 
-extern int enabled; 
-extern CallpathRuntime *runtime; 
+extern int enabled;
+extern int depth;
+extern CallpathRuntime *runtime;
 
 void callpath_increase_count(Callpath path); 
 void callpath_decrease_count(Callpath path); 
@@ -46,13 +47,31 @@ public:
     if (enabled) {
       if ( !is_handle_null(handle) ) {
 	/* get the call path where this request was allocated */
-	Callpath path = runtime->doStackwalk(); 
+	Callpath path = runtime->doStackwalk();
+
+        /* chop off frames that are within the mpileaks code itself,
+         * the first three frames are in mpileaks code */
+        size_t start = 3;
+
+        /* assume we want the entire path going all the way up to main(),
+         * unless depth is specified, then just take the number requested */
+        size_t size = path.size();
+        size_t end = size;
+        if (depth > -1) {
+          end = start + depth;
+          if (end > size) {
+            end = size;
+          }
+        }
+
+        /* we have the start and end point in the callpath, so chop it */
+        Callpath sliced = path.slice(start, end);
 	
 	/* increase callpath count */
-	callpath_increase_count(path); 
+	callpath_increase_count(sliced);
 	
 	/* associate handle with callpath */ 	
-	add_map_entry(handle, path); 
+	add_map_entry(handle, sliced); 
       } 
     }
   }
@@ -65,7 +84,7 @@ public:
 	
 	if ( it != handle2cpc.end() )
 	  /* found handle entry, update callback2count map and rm entry from handle2cpc */ 
-	  del_map_entry( it );   
+	  del_map_entry( it );
 	else 
 	  cerr << "mpileaks: Error: Non-null handle being freed but not found in handle2cpc" 
 	       << endl;

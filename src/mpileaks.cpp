@@ -12,7 +12,8 @@
 using namespace std;
 
 /* global variables */ 
-int enabled = 0; 
+int enabled = 0;
+int depth = 1; /* by default, just show single line of source code, -1 means entire trace */
 CallpathRuntime *runtime = NULL;
 
 static map<Callpath, int> callpath2count;
@@ -319,6 +320,13 @@ int MPI_Init(int* argc, char** argv[])
   int rc = PMPI_Init(argc, argv);
   PMPI_Comm_rank(MPI_COMM_WORLD, &myrank);
   PMPI_Comm_size(MPI_COMM_WORLD, &np);
+
+  /* read in the depth of the stack trace that we should capture,
+   * -1 means there is no limit */
+  char* value;
+  if ((value = getenv("MPILEAKS_STACK_DEPTH")) != NULL) {
+    depth = atoi(value);
+  }
 
   /* we wait to create our runtime object until after MPI_Init,
    * because it registers the SIGSEGV signal within stackwalker
