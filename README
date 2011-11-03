@@ -118,11 +118,11 @@ Future Work
    x ==> currently supported
    - ==> still todo
 
-   - Request objects
+   x Request objects
      x pt2pt
      x persistent pt2pt
      x nonblocking file IO
-     - generalized requests
+     x generalized requests
    x Datatypes
    x Groups
    x Communicators
@@ -132,8 +132,8 @@ Future Work
      x dynamic processes
    x User-defined reduction ops
    x Files
-   - Windows
-   - Info objects
+   x Windows
+   x Info objects
    x Attribute keyvals
    x Errhandlers (need example)
    x Memory

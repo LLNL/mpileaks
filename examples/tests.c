@@ -254,6 +254,24 @@ void groups(int myrank, int np)
 }
 
 
+void infos(int myrank, int np)
+{
+#if MPI_VERSION > 1
+/************************************************
+ * MPI VERSION >1 calls 
+ * introduced in MPI-2.0 or later
+ ************************************************/
+
+  MPI_Info info1, info2, info3;
+  MPI_Info_create(&info1);
+  MPI_Info_create(&info2);
+  MPI_Info_dup(info1, &info3);
+  MPI_Info_free(&info1);
+  //MPI_Info_free(&info2);
+  //MPI_Info_free(&info3);
+#endif
+}
+
 void comms(int myrank, int np)
 {
   MPI_Comm comm1, comm2, comm3; 
@@ -264,6 +282,27 @@ void comms(int myrank, int np)
   //MPI_Comm_free(&comm1); 
   // MPI_Comm_free(&comm2); 
   // MPI_Comm_free(&comm3); 
+}
+
+
+void wins(int myrank, int np)
+{
+#if MPI_VERSION > 1
+/************************************************
+ * MPI VERSION >1 calls 
+ * introduced in MPI-2.0 or later
+ ************************************************/
+
+  int winbuf1[1024];
+  int winbuf2[1024];
+  MPI_Aint size = 1024 * sizeof(int);
+  int disp_unit = sizeof(int);
+  MPI_Win win1, win2;
+  MPI_Win_create(winbuf1, size, disp_unit, MPI_INFO_NULL, MPI_COMM_WORLD, &win1);
+  MPI_Win_create(winbuf2, size, disp_unit, MPI_INFO_NULL, MPI_COMM_WORLD, &win2);
+  MPI_Win_free(&win1);
+  //MPI_Win_free(&win2);
+#endif
 }
 
 
@@ -289,11 +328,13 @@ int main(int argc, char *argv[])
   errhandlers(myrank, np);
   fileio(myrank, np); 
   groups(myrank, np);
+  infos(myrank, np);
   keyvals(myrank, np);
   persistent(myrank, np); 
   sendrecv(myrank, np); 
   ops(myrank, np);
   mems(myrank, np);
+  wins(myrank, np);
 
   MPI_Finalize(); 
 

@@ -26,7 +26,7 @@ LEAKS_INCLUDES = -I$(CALLPATH)/include
 LEAKS_INCLUDES += -I$(CHAOS4IB)/include
 
 TESTS = 
-LEAKS_OBJS = mpileaks.o comm.o datatype.o errhandler.o fileio.o group.o keyval.o mem.o op.o request.o
+LEAKS_OBJS = mpileaks.o comm.o datatype.o errhandler.o fileio.o group.o info.o keyval.o mem.o op.o request.o win.o
 
 
 all: $(MPILEAKS_LIB) $(TESTS)
@@ -50,6 +50,9 @@ fileio.o: fileio.cpp mpileaks.h
 group.o: group.cpp mpileaks.h
 	$(CC) $(OPT) $(LEAKS_FLAGS) $(LEAKS_INCLUDES) -c -o $@ group.cpp
 
+info.o: info.cpp mpileaks.h
+	$(CC) $(OPT) $(LEAKS_FLAGS) $(LEAKS_INCLUDES) -c -o $@ info.cpp
+
 keyval.o: keyval.cpp mpileaks.h
 	$(CC) $(OPT) $(LEAKS_FLAGS) $(LEAKS_INCLUDES) -c -o $@ keyval.cpp
 
@@ -61,6 +64,9 @@ op.o: op.cpp mpileaks.h
 
 request.o: request.cpp mpileaks.h
 	$(CC) $(OPT) $(LEAKS_FLAGS) $(LEAKS_INCLUDES) -c -o $@ request.cpp
+
+win.o: win.cpp mpileaks.h
+	$(CC) $(OPT) $(LEAKS_FLAGS) $(LEAKS_INCLUDES) -c -o $@ win.cpp
 
 
 $(MPILEAKS_LIB): $(LEAKS_OBJS)
