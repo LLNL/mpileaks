@@ -174,8 +174,8 @@ int MPI_Startall(int count, MPI_Request *array_of_requests)
   return rc; 
 }
 
-
 #if MPI_VERSION > 1
+
 /************************************************
  * File I/O calls
  ************************************************/
@@ -227,6 +227,20 @@ int MPI_File_iwrite_shared(MPI_File fh, void *buf, int count,
   Request2Stack.allocate(*request);
   return rc;
 }
+
+/* This function allocates a new request object that the user must eventually free
+ * in a call to MPI_{WAIT,TEST}{ANY,SOME,ALL} or MPI_REQUEST_FREE */
+int MPI_Grequest_start(
+  MPI_Grequest_query_function  *query_fn,
+  MPI_Grequest_free_function   *free_fn,
+  MPI_Grequest_cancel_function *cancel_fn,
+  void *extra_state, MPI_Request *request)
+{
+  int rc = PMPI_Grequest_start(query_fn, free_fn, cancel_fn, extra_state, request);
+  Request2Stack.allocate(*request);
+  return rc;
+}
+
 #endif
 
 /************************************************
