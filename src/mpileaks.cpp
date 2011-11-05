@@ -71,13 +71,20 @@ static void mpileaks_print_path(Callpath path, int count)
 {
   int i, size = path.size();
 
-  cout << "Count: " << count << endl; 
+  cout << "Leaked: " << count; 
+  if (size > 1) {
+    cout << endl;
+  } else {
+    cout << "  ::";
+  }
   for (i = 0; i < size; i++) {
     FrameId frame = path[i];
     FrameInfo info = trans.translate(frame);
     cout << "  " << info << endl;
   }
-  cout << endl;
+  if (size > 1) {
+    cout << endl;
+  }
 }
 
 
@@ -300,6 +307,9 @@ static void mpileaks_dump_outstanding()
     /* sort callpaths by total count */
     path_list.sort(compare_counts);
 
+    cout << "----------------------------------------------------------------------" << endl; 
+    cout << "mpileaks: START REPORT -----------------------------------------------" << endl; 
+    cout << "----------------------------------------------------------------------" << endl; 
     /* now print each callpath with its count */
     list<callpath_count>::iterator it_list;
     for (it_list = path_list.begin(); it_list != path_list.end(); it_list++) {
@@ -307,6 +317,9 @@ static void mpileaks_dump_outstanding()
       int count = (*it_list).count;
       mpileaks_print_path(path, count);
     }
+    cout << "----------------------------------------------------------------------" << endl; 
+    cout << "mpileaks: END REPORT -------------------------------------------------" << endl; 
+    cout << "----------------------------------------------------------------------" << endl; 
   }
 }
 

@@ -6,7 +6,10 @@ include ../defs.mk
 
 TOOLS = /usr/global/tools
 # Mpileaks dependencies:
-CALLPATH = $(TOOLS)/mpileaks
+#CALLPATH = $(TOOLS)/mpileaks
+CALLPATH = $(TOOLS)/mpileaks/mvapich-gnu
+#CALLPATH = $(TOOLS)/mpileaks/mvapich-intel
+#CALLPATH = $(TOOLS)/mpileaks/mvapich2-gnu
 CHAOS4IB = $(TOOLS)/adept-utils/chaos_4_x86_64_ib
 STACKWALKER = $(TOOLS)/dyninst/stackwalker/chaos_4_x86_64_ib/stackwalker-2.0
 
@@ -19,6 +22,8 @@ STACKWALKER = $(TOOLS)/dyninst/stackwalker/chaos_4_x86_64_ib/stackwalker-2.0
 PERSISTENT_COMM = 1
 
 CC = mpig++
+#CC = mpiicpc
+#CC = mpicxx
 OPT = -Wall -Werror
 LEAKS_FLAGS = -g -O0 -fPIC
 

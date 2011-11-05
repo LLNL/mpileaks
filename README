@@ -35,7 +35,7 @@ The following objects are tracked:
    x Groups
    x Communicators
      x dup / split / create
-     x merge
+     x intercomm create / merge
      x topology
      x dynamic processes
    x User-defined reduction ops
@@ -46,6 +46,7 @@ The following objects are tracked:
    x Errhandlers (need example)
    x Memory
    - Ports
+   - Published names
 
 
 ===================================================================
