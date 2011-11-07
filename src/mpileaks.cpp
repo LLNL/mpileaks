@@ -16,7 +16,8 @@ int enabled = 0;
 int depth = 1; /* by default, just show single line of source code, -1 means entire trace */
 CallpathRuntime *runtime = NULL;
 
-static map<Callpath, int> callpath2count;
+static map<Callpath,int> callpath2count;
+map<Callpath,int> callpath2count_missing_alloc;
 static Translator trans; 
 static int myrank, np; 
 
@@ -31,35 +32,45 @@ typedef struct {
  *** Call path related functions
  ******************************************/ 
 
-void callpath_increase_count(Callpath path)
+void callpath2count_increase(map<Callpath,int> &path2count, Callpath path)
 {
   /* search for this path in our stacktrace-to-count map */
-  map<Callpath,int>::iterator it_callpath2count = callpath2count.find(path);
-  if (it_callpath2count != callpath2count.end()) {
+  map<Callpath,int>::iterator it_path2count = path2count.find(path);
+  if (it_path2count != path2count.end()) {
     /* found it, increment the count for this path */
-    it_callpath2count->second++;
+    it_path2count->second++;
   } else {
     /* not found, so insert the path with a count of 1 */
-    callpath2count[path] = 1;
+    path2count[path] = 1;
   } 
 }
 
-void callpath_decrease_count(Callpath path)
+void callpath2count_decrease(map<Callpath,int> &path2count, Callpath path)
 {
-  /* now lookup path in callpath2count */
-  map<Callpath,int>::iterator it_callpath2count = callpath2count.find(path);
-  if (it_callpath2count != callpath2count.end()) {
-    if (it_callpath2count->second > 1) {
+  /* now lookup path in path2count */
+  map<Callpath,int>::iterator it_path2count = path2count.find(path);
+  if (it_path2count != path2count.end()) {
+    if (it_path2count->second > 1) {
       /* decrement the count for this path */
-      it_callpath2count->second--;
+      it_path2count->second--;
     } else {
       /* remove the entry from the path-to-count map */
-      callpath2count.erase(it_callpath2count);
+      path2count.erase(it_path2count);
     }
   } else {
     cerr << "mpileaks: ERROR: found a path in handle2cpc map, " <<
       "but no count found in callpath2count map" << endl;
   }
+}
+
+void callpath_increase_count(Callpath path)
+{
+  return callpath2count_increase(callpath2count, path);
+}
+
+void callpath_decrease_count(Callpath path)
+{
+  return callpath2count_decrease(callpath2count, path);
 }
 
 
@@ -71,7 +82,7 @@ static void mpileaks_print_path(Callpath path, int count)
 {
   int i, size = path.size();
 
-  cout << "Leaked: " << count; 
+  cout << "Count: " << count; 
   if (size > 1) {
     cout << endl;
   } else {
@@ -263,12 +274,12 @@ static void list_merge(list<callpath_count>& list1, list<callpath_count>& list2)
 
 
 /* cycle through and print each stack trace for which there is an outstanding request */
-static void mpileaks_dump_outstanding()
+static void mpileaks_reduce_callpaths(map<Callpath,int> &path2count, char* name)
 {
   /* create a list of callpaths and counts */
   list<callpath_count> path_list;
   map<Callpath,int>::iterator it;
-  for (it = callpath2count.begin(); it != callpath2count.end(); it++) {
+  for (it = path2count.begin(); it != path2count.end(); it++) {
     Callpath path = (*it).first;
     int count = (*it).second;
     callpath_count* elem = new callpath_count;
@@ -308,7 +319,7 @@ static void mpileaks_dump_outstanding()
     path_list.sort(compare_counts);
 
     cout << "----------------------------------------------------------------------" << endl; 
-    cout << "mpileaks: START REPORT -----------------------------------------------" << endl; 
+    cout << "START SECTION: " << name << endl; 
     cout << "----------------------------------------------------------------------" << endl; 
     /* now print each callpath with its count */
     list<callpath_count>::iterator it_list;
@@ -317,6 +328,26 @@ static void mpileaks_dump_outstanding()
       int count = (*it_list).count;
       mpileaks_print_path(path, count);
     }
+    cout << "----------------------------------------------------------------------" << endl; 
+    cout << "END SECTION: " << name << endl; 
+    cout << "----------------------------------------------------------------------" << endl; 
+  }
+}
+
+
+/* cycle through and print each stack trace for which there is an outstanding request */
+static void mpileaks_dump_outstanding()
+{
+  if (myrank == 0) {
+    cout << "----------------------------------------------------------------------" << endl; 
+    cout << "mpileaks: START REPORT -----------------------------------------------" << endl; 
+    cout << "----------------------------------------------------------------------" << endl; 
+  }
+
+  mpileaks_reduce_callpaths(callpath2count,               "LEAKED OBJECTS");
+  mpileaks_reduce_callpaths(callpath2count_missing_alloc, "ALLOCATION CALL UNKNOWN");
+
+  if (myrank == 0) {
     cout << "----------------------------------------------------------------------" << endl; 
     cout << "mpileaks: END REPORT -------------------------------------------------" << endl; 
     cout << "----------------------------------------------------------------------" << endl; 

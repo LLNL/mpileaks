@@ -14,6 +14,11 @@ extern CallpathRuntime *runtime;
 void callpath_increase_count(Callpath path); 
 void callpath_decrease_count(Callpath path); 
 
+extern map<Callpath,int> callpath2count_missing_alloc;
+
+void callpath2count_increase(map<Callpath,int> &callpath2count, Callpath path); 
+void callpath2count_decrease(map<Callpath,int> &callpath2count, Callpath path); 
+
 
 /*
  * Abstract class (cannot be instantiated): 
@@ -43,35 +48,40 @@ public:
   /******************************************************
    * Functions to be used in all derived classes
    ******************************************************/
+  Callpath get_callpath(size_t start) {
+    /* get the current call path */
+    Callpath path = runtime->doStackwalk();
+
+    /* assume we want the entire path going all the way up to main(),
+     * unless depth is specified, then just take the number requested */
+    size_t size = path.size();
+    size_t end = size;
+    if (depth > -1) {
+      end = start + depth;
+      if (end > size) {
+        end = size;
+      }
+    }
+
+    /* chop off frames that are within the mpileaks code itself,
+     * and only show frames up to certain depth along path to main() */
+    Callpath sliced = path.slice(start, end);
+
+    return sliced;
+  }
+
   void allocate( T &handle ) {
     if (enabled) {
       if ( !is_handle_null(handle) ) {
-	/* get the call path where this request was allocated */
-	Callpath path = runtime->doStackwalk();
+	/* get the call path where this request was allocated,
+         * chop off 4 layers of mpileaks calls */
+	Callpath path = get_callpath(4);
 
-        /* chop off frames that are within the mpileaks code itself,
-         * the first three frames are in mpileaks code */
-        size_t start = 3;
-
-        /* assume we want the entire path going all the way up to main(),
-         * unless depth is specified, then just take the number requested */
-        size_t size = path.size();
-        size_t end = size;
-        if (depth > -1) {
-          end = start + depth;
-          if (end > size) {
-            end = size;
-          }
-        }
-
-        /* we have the start and end point in the callpath, so chop it */
-        Callpath sliced = path.slice(start, end);
-	
 	/* increase callpath count */
-	callpath_increase_count(sliced);
+	callpath_increase_count(path);
 	
 	/* associate handle with callpath */ 	
-	add_map_entry(handle, sliced); 
+	add_map_entry(handle, path); 
       } 
     }
   }
@@ -82,12 +92,22 @@ public:
 	/* lookup stack based on handle value */
 	typename map<T,U>::iterator it = handle2cpc.find(handle);
 	
-	if ( it != handle2cpc.end() )
+	if ( it != handle2cpc.end() ) {
 	  /* found handle entry, update callback2count map and rm entry from handle2cpc */ 
 	  del_map_entry( it );
-	else 
+	} else  {
+	  /* Non-null handle being freed but not found in handle2cpc */
+	  /* get the call path where this request was allocated */
+	  Callpath path = get_callpath(4);
+
+	  /* increase callpath count */
+	  callpath2count_increase(callpath2count_missing_alloc, path);
+
+          /*
 	  cerr << "mpileaks: Error: Non-null handle being freed but not found in handle2cpc" 
 	       << endl;
+          */
+        }
       }
     }
   }

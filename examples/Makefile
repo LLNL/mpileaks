@@ -3,7 +3,7 @@
 include ../defs.mk
 
 CC = mpicc
-CFLAGS = -g -Wall -Werror
+CFLAGS = -g -O0 -Wall -Werror
 
 # Codes that use mpileaks can be relinked using these flags: 
 # LDFLAGS = -Wl,-rpath,$(MPILEAKS_LIBDIR) -L$(MPILEAKS_LIBDIR) -lmpileaks
