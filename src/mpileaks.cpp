@@ -58,7 +58,7 @@ void callpath2count_decrease(map<Callpath,int> &path2count, Callpath path)
       path2count.erase(it_path2count);
     }
   } else {
-    cerr << "mpileaks: ERROR: found a path in handle2cpc map, " <<
+    cerr << "mpileaks: INTERNAL ERROR: found a path in handle2cpc map, " <<
       "but no count found in callpath2count map" << endl;
   }
 }

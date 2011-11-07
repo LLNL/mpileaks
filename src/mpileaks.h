@@ -96,17 +96,12 @@ public:
 	  /* found handle entry, update callback2count map and rm entry from handle2cpc */ 
 	  del_map_entry( it );
 	} else  {
-	  /* Non-null handle being freed but not found in handle2cpc */
-	  /* get the call path where this request was allocated */
+	  /* Non-null handle being freed but not found in handle2cpc,
+           * capture the callpath of the free call to report later */
 	  Callpath path = get_callpath(4);
 
-	  /* increase callpath count */
+	  /* increase callpath count for this free call */
 	  callpath2count_increase(callpath2count_missing_alloc, path);
-
-          /*
-	  cerr << "mpileaks: Error: Non-null handle being freed but not found in handle2cpc" 
-	       << endl;
-          */
         }
       }
     }
@@ -182,7 +177,7 @@ template<class T> class Handle2Stack : public Handle2CPC<T, stack<Callpath>*>
 	Handle2CPC<T,stack<Callpath>*>::handle2cpc.erase(it); 
       }
     } else {
-      cerr << "mpileaks: Error: callpath stack should not be empty" << endl; 
+      cerr << "mpileaks: INTERNAL ERROR: callpath stack should not be empty" << endl; 
     }
   }  
 };
