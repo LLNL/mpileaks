@@ -1,3 +1,30 @@
 #!/bin/bash
 
-LD_PRELOAD=$MPILEAKS_SO srun "$@"
+prog="srun-mpileaks"
+
+prefix="/usr/global/tools/mpileaks"
+bin="${prefix}/bin"
+
+# assume that we'll exit with an error
+rc=1
+
+# attempt to determine which MPI the app is linked to
+mpilib=`${bin}/extract_mpi $@`
+if [ $? == 0 ] ; then
+  # found the mpi, so select the matching mpileaks library
+  MPILEAKS_SO="${prefix}/${mpilib}/lib/libmpileaks.so"
+
+  # tell the user what we're doing
+  echo "LD_PRELOAD=$MPILEAKS_SO"
+
+  # now preload, run, and remember the exit code
+  LD_PRELOAD=$MPILEAKS_SO srun "$@"
+  rc=$?
+else
+  # failed to find the mpi library, report errors to user
+  echo $mpilib
+  echo "$prog: ERROR: srun-mpileaks will not work for this application, you must set LD_PRELOAD manually"
+fi
+
+# return our exit code to the user
+exit $rc
