@@ -1,12 +1,12 @@
 #include "mpi.h"
-#include "mpileaks.h"                 /* Handle2Set */ 
+#include "mpileaks.h"                 /* Handle2Callpath */ 
 
 /*
  * This class provides 'allocate' and 'free' functions needed to
  * keep track of certain functions like MPI_ISend with MPI_Wait. 
  * For example, 
- * On an MPI_Send_init or MPI_Start, allocate is called. 
- * On an MPI_Wait or MPI_Request_free, free is called. 
+ * On an MPI_ISend, allocate is called. 
+ * On an MPI_Wait, free is called. 
  * At the end, if there are allocated objects that were not freed,
  * the callpaths and count is reported: you have MPI memory leaks!
  *
@@ -14,14 +14,13 @@
  * instantiated. This is necessary since it depends on the type of 
  * handle used (e.g., MPI_Request). 
  */ 
-static class MPI_Request2CallpathSet : public Handle2Set<MPI_Request>
+static class MPI_Request2Callpath : public Handle2Callpath<MPI_Request>
 {
 public: 
   bool is_handle_null(MPI_Request handle) {
     return (handle == MPI_REQUEST_NULL) ? 1 : 0; 
   }
 } Request2Callpath; 
-
 
 
 /************************************************
@@ -44,15 +43,6 @@ static MPI_Request* mpileaks_request_copy_array(int count, MPI_Request req[])
 
   return req_copies;
 }
-
-static void mpileaks_request_allocate_array(int count, MPI_Request *reqs)
-{
-  int i; 
-  for (i = 0; i < count; i++) {
-    Request2Callpath.allocate(reqs[i]); 
-  }
-}
-
 
 /* given a copy of the request array and a new version, free any requests that
  * have changed to MPI_REQUEST_NULL */
@@ -114,138 +104,20 @@ int MPI_Irecv(void* buf, int count, MPI_Datatype dt, int src, int tag, MPI_Comm 
 }
 
 
-/************************************************
- * Persistent communication
- * An 'init' call should match an MPI_Request_free. 
- * A 'start' call should match a (multiple) complete operation (e.g., MPI_Wait). 
- ************************************************/
 
-int MPI_Send_init(void* buf, int count, MPI_Datatype datatype, int dest, int tag, 
-		  MPI_Comm comm, MPI_Request *request)
-{
-  int rc = PMPI_Send_init(buf, count, datatype, dest, tag, comm, request); 
-  Request2Callpath.allocate(*request); 
-  return rc; 
-}
 
-int MPI_Bsend_init(void* buf, int count, MPI_Datatype datatype, int dest, int tag, 
-		   MPI_Comm comm, MPI_Request *request)
-{
-  int rc = PMPI_Bsend_init(buf, count, datatype, dest, tag, comm, request); 
-  Request2Callpath.allocate(*request); 
-  return rc; 
-}
 
-int MPI_Ssend_init(void* buf, int count, MPI_Datatype datatype, int dest, int tag, 
-		   MPI_Comm comm, MPI_Request *request)
-{
-  int rc = PMPI_Ssend_init(buf, count, datatype, dest, tag, comm, request); 
-  Request2Callpath.allocate(*request); 
-  return rc; 
-}
+/* other allocation calls */
 
-int MPI_Rsend_init(void* buf, int count, MPI_Datatype datatype, int dest, int tag, 
-		   MPI_Comm comm, MPI_Request *request)
-{
-  int rc = PMPI_Rsend_init(buf, count, datatype, dest, tag, comm, request); 
-  Request2Callpath.allocate(*request); 
-  return rc; 
-}
+/* TODO:
+  MPI_Start
+  MPI_Startall
+  MPI_Send_init
+  MPI_Recv_init
+  Generalized requests
+*/
 
-int MPI_Recv_init(void* buf, int count, MPI_Datatype datatype, int source, int tag, 
-		  MPI_Comm comm, MPI_Request *request)
-{
-  int rc = PMPI_Recv_init(buf, count, datatype, source, tag, comm, request); 
-  Request2Callpath.allocate(*request); 
-  return rc; 
-}
-
-int MPI_Start(MPI_Request *request)
-{
-  int rc = PMPI_Start(request); 
-  Request2Callpath.allocate(*request); 
-  return rc; 
-}
-
-int MPI_Startall(int count, MPI_Request *array_of_requests)
-{
-  int rc = PMPI_Startall(count, array_of_requests); 
-  mpileaks_request_allocate_array(count, array_of_requests); 
-  return rc; 
-}
-
-#if MPI_VERSION > 1
-
-/************************************************
- * File I/O calls
- ************************************************/
-
-int MPI_File_iread_at(MPI_File fh, MPI_Offset offset, void *buf, int count,
-                      MPI_Datatype datatype, MPI_Request *request)
-{
-  int rc = PMPI_File_iread_at(fh, offset, buf, count, datatype, request);
-  Request2Callpath.allocate(*request);
-  return rc;
-}
-
-int MPI_File_iwrite_at(MPI_File fh, MPI_Offset offset, void *buf, int count,
-                       MPI_Datatype datatype, MPI_Request *request)
-{
-  int rc = PMPI_File_iwrite_at(fh, offset, buf, count, datatype, request);
-  Request2Callpath.allocate(*request);
-  return rc;
-}
-
-int MPI_File_iread(MPI_File fh, void *buf, int count,
-                   MPI_Datatype datatype, MPI_Request *request)
-{
-  int rc = PMPI_File_iread(fh, buf, count, datatype, request);
-  Request2Callpath.allocate(*request);
-  return rc;
-}
-
-int MPI_File_iwrite(MPI_File fh, void *buf, int count,
-                   MPI_Datatype datatype, MPI_Request *request)
-{
-  int rc = PMPI_File_iwrite(fh, buf, count, datatype, request);
-  Request2Callpath.allocate(*request);
-  return rc;
-}
-
-int MPI_File_iread_shared(MPI_File fh, void *buf, int count,
-                          MPI_Datatype datatype, MPI_Request *request)
-{
-  int rc = PMPI_File_iread_shared(fh, buf, count, datatype, request);
-  Request2Callpath.allocate(*request);
-  return rc;
-}
-
-int MPI_File_iwrite_shared(MPI_File fh, void *buf, int count,
-                           MPI_Datatype datatype, MPI_Request *request)
-{
-  int rc = PMPI_File_iwrite_shared(fh, buf, count, datatype, request);
-  Request2Callpath.allocate(*request);
-  return rc;
-}
-
-/* This function allocates a new request object that the user must eventually free
- * in a call to MPI_{WAIT,TEST}{ANY,SOME,ALL} or MPI_REQUEST_FREE */
-int MPI_Grequest_start(
-  MPI_Grequest_query_function  *query_fn,
-  MPI_Grequest_free_function   *free_fn,
-  MPI_Grequest_cancel_function *cancel_fn,
-  void *extra_state, MPI_Request *request)
-{
-  int rc = PMPI_Grequest_start(query_fn, free_fn, cancel_fn, extra_state, request);
-  Request2Callpath.allocate(*request);
-  return rc;
-}
-
-#endif
-
-/************************************************
- * Completion calls
- ************************************************/
+/* free calls */
 
 int MPI_Request_free(MPI_Request* req)
 {

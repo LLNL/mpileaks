@@ -1,5 +1,5 @@
 #include "mpi.h"
-#include "mpileaks.h"                 /* Handle2Set */ 
+#include "mpileaks.h"                 /* Handle2Stack */ 
 
 /*
  * This class provides 'allocate' and 'free' functions needed to
@@ -14,13 +14,13 @@
  * instantiated. This is necessary since it depends on the type of 
  * handle used (e.g., MPI_Request). 
  */ 
-static class MPI_Request2CallpathSet : public Handle2Set<MPI_Request>
+static class MPI_Request2Stack : public Handle2Stack<MPI_Request>
 {
 public: 
   bool is_handle_null(MPI_Request handle) {
     return (handle == MPI_REQUEST_NULL) ? 1 : 0; 
   }
-} Request2Callpath; 
+} Request2Stack; 
 
 
 
@@ -49,7 +49,7 @@ static void mpileaks_request_allocate_array(int count, MPI_Request *reqs)
 {
   int i; 
   for (i = 0; i < count; i++) {
-    Request2Callpath.allocate(reqs[i]); 
+    Request2Stack.allocate(reqs[i]); 
   }
 }
 
@@ -61,7 +61,7 @@ static void mpileaks_request_free_array(int count, MPI_Request req1[], MPI_Reque
   int i;
   for (i = 0; i < count; i++) {
     if (req1[i] != MPI_REQUEST_NULL && req2[i] == MPI_REQUEST_NULL) {
-      Request2Callpath.free(req1[i]);
+      Request2Stack.free(req1[i]);
     }
   }
 }
@@ -76,7 +76,7 @@ int MPI_Isend(void* buf, int count, MPI_Datatype dt, int dest, int tag, MPI_Comm
 	      MPI_Request* req)
 {
   int rc = PMPI_Isend(buf, count, dt, dest, tag, comm, req);
-  Request2Callpath.allocate(*req); 
+  Request2Stack.allocate(*req); 
   return rc;
 }
 
@@ -84,21 +84,21 @@ int MPI_Issend(void* buf, int count, MPI_Datatype dt, int dest, int tag, MPI_Com
 	       MPI_Request* req)
 {
   int rc = PMPI_Issend(buf, count, dt, dest, tag, comm, req);
-  Request2Callpath.allocate(*req);
+  Request2Stack.allocate(*req);
   return rc;
 }
 
 int MPI_Irsend(void* buf, int count, MPI_Datatype dt, int dest, int tag, MPI_Comm comm, MPI_Request* req)
 {
   int rc = PMPI_Irsend(buf, count, dt, dest, tag, comm, req);
-  Request2Callpath.allocate(*req);
+  Request2Stack.allocate(*req);
   return rc;
 }
 
 int MPI_Ibsend(void* buf, int count, MPI_Datatype dt, int dest, int tag, MPI_Comm comm, MPI_Request* req)
 {
   int rc = PMPI_Ibsend(buf, count, dt, dest, tag, comm, req);
-  Request2Callpath.allocate(*req);
+  Request2Stack.allocate(*req);
   return rc;
 }
 
@@ -109,7 +109,7 @@ int MPI_Ibsend(void* buf, int count, MPI_Datatype dt, int dest, int tag, MPI_Com
 int MPI_Irecv(void* buf, int count, MPI_Datatype dt, int src, int tag, MPI_Comm comm, MPI_Request* req)
 {
   int rc = PMPI_Irecv(buf, count, dt, src, tag, comm, req);
-  Request2Callpath.allocate(*req);
+  Request2Stack.allocate(*req);
   return rc;
 }
 
@@ -124,7 +124,7 @@ int MPI_Send_init(void* buf, int count, MPI_Datatype datatype, int dest, int tag
 		  MPI_Comm comm, MPI_Request *request)
 {
   int rc = PMPI_Send_init(buf, count, datatype, dest, tag, comm, request); 
-  Request2Callpath.allocate(*request); 
+  Request2Stack.allocate(*request); 
   return rc; 
 }
 
@@ -132,7 +132,7 @@ int MPI_Bsend_init(void* buf, int count, MPI_Datatype datatype, int dest, int ta
 		   MPI_Comm comm, MPI_Request *request)
 {
   int rc = PMPI_Bsend_init(buf, count, datatype, dest, tag, comm, request); 
-  Request2Callpath.allocate(*request); 
+  Request2Stack.allocate(*request); 
   return rc; 
 }
 
@@ -140,7 +140,7 @@ int MPI_Ssend_init(void* buf, int count, MPI_Datatype datatype, int dest, int ta
 		   MPI_Comm comm, MPI_Request *request)
 {
   int rc = PMPI_Ssend_init(buf, count, datatype, dest, tag, comm, request); 
-  Request2Callpath.allocate(*request); 
+  Request2Stack.allocate(*request); 
   return rc; 
 }
 
@@ -148,7 +148,7 @@ int MPI_Rsend_init(void* buf, int count, MPI_Datatype datatype, int dest, int ta
 		   MPI_Comm comm, MPI_Request *request)
 {
   int rc = PMPI_Rsend_init(buf, count, datatype, dest, tag, comm, request); 
-  Request2Callpath.allocate(*request); 
+  Request2Stack.allocate(*request); 
   return rc; 
 }
 
@@ -156,14 +156,14 @@ int MPI_Recv_init(void* buf, int count, MPI_Datatype datatype, int source, int t
 		  MPI_Comm comm, MPI_Request *request)
 {
   int rc = PMPI_Recv_init(buf, count, datatype, source, tag, comm, request); 
-  Request2Callpath.allocate(*request); 
+  Request2Stack.allocate(*request); 
   return rc; 
 }
 
 int MPI_Start(MPI_Request *request)
 {
   int rc = PMPI_Start(request); 
-  Request2Callpath.allocate(*request); 
+  Request2Stack.allocate(*request); 
   return rc; 
 }
 
@@ -174,8 +174,8 @@ int MPI_Startall(int count, MPI_Request *array_of_requests)
   return rc; 
 }
 
-#if MPI_VERSION > 1
 
+#if MPI_VERSION > 1
 /************************************************
  * File I/O calls
  ************************************************/
@@ -184,7 +184,7 @@ int MPI_File_iread_at(MPI_File fh, MPI_Offset offset, void *buf, int count,
                       MPI_Datatype datatype, MPI_Request *request)
 {
   int rc = PMPI_File_iread_at(fh, offset, buf, count, datatype, request);
-  Request2Callpath.allocate(*request);
+  Request2Stack.allocate(*request);
   return rc;
 }
 
@@ -192,7 +192,7 @@ int MPI_File_iwrite_at(MPI_File fh, MPI_Offset offset, void *buf, int count,
                        MPI_Datatype datatype, MPI_Request *request)
 {
   int rc = PMPI_File_iwrite_at(fh, offset, buf, count, datatype, request);
-  Request2Callpath.allocate(*request);
+  Request2Stack.allocate(*request);
   return rc;
 }
 
@@ -200,7 +200,7 @@ int MPI_File_iread(MPI_File fh, void *buf, int count,
                    MPI_Datatype datatype, MPI_Request *request)
 {
   int rc = PMPI_File_iread(fh, buf, count, datatype, request);
-  Request2Callpath.allocate(*request);
+  Request2Stack.allocate(*request);
   return rc;
 }
 
@@ -208,7 +208,7 @@ int MPI_File_iwrite(MPI_File fh, void *buf, int count,
                    MPI_Datatype datatype, MPI_Request *request)
 {
   int rc = PMPI_File_iwrite(fh, buf, count, datatype, request);
-  Request2Callpath.allocate(*request);
+  Request2Stack.allocate(*request);
   return rc;
 }
 
@@ -216,7 +216,7 @@ int MPI_File_iread_shared(MPI_File fh, void *buf, int count,
                           MPI_Datatype datatype, MPI_Request *request)
 {
   int rc = PMPI_File_iread_shared(fh, buf, count, datatype, request);
-  Request2Callpath.allocate(*request);
+  Request2Stack.allocate(*request);
   return rc;
 }
 
@@ -224,23 +224,9 @@ int MPI_File_iwrite_shared(MPI_File fh, void *buf, int count,
                            MPI_Datatype datatype, MPI_Request *request)
 {
   int rc = PMPI_File_iwrite_shared(fh, buf, count, datatype, request);
-  Request2Callpath.allocate(*request);
+  Request2Stack.allocate(*request);
   return rc;
 }
-
-/* This function allocates a new request object that the user must eventually free
- * in a call to MPI_{WAIT,TEST}{ANY,SOME,ALL} or MPI_REQUEST_FREE */
-int MPI_Grequest_start(
-  MPI_Grequest_query_function  *query_fn,
-  MPI_Grequest_free_function   *free_fn,
-  MPI_Grequest_cancel_function *cancel_fn,
-  void *extra_state, MPI_Request *request)
-{
-  int rc = PMPI_Grequest_start(query_fn, free_fn, cancel_fn, extra_state, request);
-  Request2Callpath.allocate(*request);
-  return rc;
-}
-
 #endif
 
 /************************************************
@@ -254,7 +240,7 @@ int MPI_Request_free(MPI_Request* req)
   int rc = PMPI_Request_free(req);
 
   if (req_copy != MPI_REQUEST_NULL) {
-    Request2Callpath.free(req_copy);
+    Request2Stack.free(req_copy);
   }
 
   return rc;
@@ -267,7 +253,7 @@ int MPI_Wait(MPI_Request* req, MPI_Status* stat)
   int rc = PMPI_Wait(req, stat);
 
   if (req_copy != MPI_REQUEST_NULL) {
-    Request2Callpath.free(req_copy);
+    Request2Stack.free(req_copy);
   }
 
   return rc;
@@ -280,7 +266,7 @@ int MPI_Test(MPI_Request* req, int* flag, MPI_Status* stat)
   int rc = PMPI_Test(req, flag, stat);
 
   if (*flag && req_copy != MPI_REQUEST_NULL) {
-    Request2Callpath.free(req_copy);
+    Request2Stack.free(req_copy);
   }
 
   return rc;
@@ -294,7 +280,7 @@ int MPI_Waitany(int count, MPI_Request req[], int* index, MPI_Status* stat)
 
   int idx = *index;
   if (idx != MPI_UNDEFINED) {
-    Request2Callpath.free(req_copies[idx]);
+    Request2Stack.free(req_copies[idx]);
   }
   if (req_copies != NULL) {
     free(req_copies);
@@ -311,7 +297,7 @@ int MPI_Testany(int count, MPI_Request req[], int* index, int* flag, MPI_Status*
 
   int idx = *index;
   if (idx != MPI_UNDEFINED && *flag) {
-    Request2Callpath.free(req_copies[idx]);
+    Request2Stack.free(req_copies[idx]);
   }
   if (req_copies != NULL) {
     free(req_copies);

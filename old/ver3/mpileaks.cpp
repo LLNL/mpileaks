@@ -3,38 +3,81 @@
 #include <list>
 
 #include "mpi.h"
-#include "CallpathRuntime.h"                // Callpath
+#include "CallpathRuntime.h"
 #include "Translator.h"
 #include "FrameInfo.h"
-#include "callpath2count.h"                   // Callpath2Count, callpath_count_t
+
 
 
 using namespace std;
 
-
-/***********************************************************
- *** Global variables shared with other files
- ***********************************************************/
-int enabled = 0;
-
-/* depth=1 shows single line of source code, -1 means entire trace */
-int depth = 1; 
-
+/* global variables */ 
+int enabled = 0; 
 CallpathRuntime *runtime = NULL;
 
-/* h2cpc_objs stores pointers to all objects derived from Callpath2Count.
-   This includes all handle to callpath container objects. This 
-   is needed so that their internal maps can be accessed to
-   aggregate their (callpath,count) information. */ 
-list<Callpath2Count*> *h2cpc_objs = NULL; 
-
-/***********************************************************
- *** End of global variables 
- ***********************************************************/
-
-
+static map<Callpath, int> callpath2count;
 static Translator trans; 
 static int myrank, np; 
+
+typedef struct {
+  Callpath path;
+  int count;
+} callpath_count;
+
+
+
+/******************************************
+ *** Call path related functions
+ ******************************************/ 
+
+typedef map<Callpath,int>::iterator callpath2count_it; 
+
+int callpath_get_count(Callpath path)
+{
+  callpath2count_it it = callpath2count.find(path); 
+  if (it != callpath2count.end()) 
+    return it->second; 
+  return -1; 
+}
+
+void callpath_get_allcounts()
+{
+  callpath2count_it it; 
+  for (it = callpath2count.begin(); it != callpath2count.end(); it++) {
+    cout << "callpath_count=" << it->second << endl; 
+  }
+}
+
+void callpath_increase_count(Callpath path)
+{
+  /* search for this path in our stacktrace-to-count map */
+  map<Callpath,int>::iterator it_callpath2count = callpath2count.find(path);
+  if (it_callpath2count != callpath2count.end()) {
+    /* found it, increment the count for this path */
+    it_callpath2count->second++;
+  } else {
+    /* not found, so insert the path with a count of 1 */
+    callpath2count[path] = 1;
+  } 
+}
+
+void callpath_decrease_count(Callpath path)
+{
+  /* now lookup path in callpath2count */
+  map<Callpath,int>::iterator it_callpath2count = callpath2count.find(path);
+  if (it_callpath2count != callpath2count.end()) {
+    if (it_callpath2count->second > 1) {
+      /* decrement the count for this path */
+      it_callpath2count->second--;
+    } else {
+      /* remove the entry from the path-to-count map */
+      callpath2count.erase(it_callpath2count);
+    }
+  } else {
+    cerr << "mpileaks: ERROR: found a path in handle2cpc map, " <<
+      "but no count found in callpath2count map" << endl;
+  }
+}
 
 
 /***********************************************************
@@ -45,25 +88,18 @@ static void mpileaks_print_path(Callpath path, int count)
 {
   int i, size = path.size();
 
-  cout << "Count: " << count; 
-  if (size > 1) {
-    cout << endl;
-  } else {
-    cout << "  ::";
-  }
+  cout << "Count: " << count << endl; 
   for (i = 0; i < size; i++) {
     FrameId frame = path[i];
     FrameInfo info = trans.translate(frame);
     cout << "  " << info << endl;
   }
-  if (size > 1) {
-    cout << endl;
-  }
+  cout << endl;
 }
 
 
 /* sort callpath_count items by path */
-static bool compare_callpaths(callpath_count_t first, callpath_count_t second)
+static bool compare_callpaths(callpath_count first, callpath_count second)
 {
   callpath_path_lt lt;
   Callpath first_path  = first.path;
@@ -73,7 +109,7 @@ static bool compare_callpaths(callpath_count_t first, callpath_count_t second)
 
 
 /* sort callpath_count items by count (descending), then path (ascending) */
-static bool compare_counts(callpath_count_t first, callpath_count_t second)
+static bool compare_counts(callpath_count first, callpath_count second)
 {
   /* sort by counts in reverse order */
   int first_count  = first.count;
@@ -93,23 +129,23 @@ static bool compare_counts(callpath_count_t first, callpath_count_t second)
 
 
 /* pack and send a list of callpath_count items to specified destination process */
-static void list_send(list<callpath_count_t>& path_list, int dest, MPI_Comm comm)
+static void list_send(list<callpath_count>& path_list, int dest, MPI_Comm comm)
 {
-  list<callpath_count_t>::iterator it_list;
+  list<callpath_count>::iterator it_list;
 
   /* get size of buffer to pack list into */
   int pack_size = 0;
   pack_size += pmpi_packed_size(1, MPI_INT, comm);
   pack_size += ModuleId::packed_size_id_map(comm);
   for (it_list = path_list.begin(); it_list != path_list.end(); it_list++) {
-    Callpath path = (*it_list).path;
+    Callpath path = it_list->path;
     pack_size += path.packed_size(comm);
     pack_size += pmpi_packed_size(1, MPI_INT, comm);
   }
 
-  /* Allocate memory */
-  /* In case 'buffer' needs to be a (void *), create 'buf' to 
-     free the memory (freeing a void* is undefined) */ 
+  /* allocate memory */
+  /* ea: in case 'buffer' needs to be a (void *), create 'buf' to 
+     free the memory (freeing a void* is undefined */ 
   char* buf = NULL; 
   void* buffer = NULL;
   if (pack_size > 0) {
@@ -124,8 +160,8 @@ static void list_send(list<callpath_count_t>& path_list, int dest, MPI_Comm comm
   if (size > 0) {
     ModuleId::pack_id_map(buffer, pack_size, &position, comm);
     for (it_list = path_list.begin(); it_list != path_list.end(); it_list++) {
-      (*it_list).path.pack(buffer, pack_size, &position, comm);
-      int count = (*it_list).count;
+      it_list->path.pack(buffer, pack_size, &position, comm);
+      int count = it_list->count;
       PMPI_Pack(&count, 1, MPI_INT, buffer, pack_size, &position, comm);
     }
   }
@@ -136,6 +172,7 @@ static void list_send(list<callpath_count_t>& path_list, int dest, MPI_Comm comm
   /* send list */
   PMPI_Send(buffer, position, MPI_PACKED, dest, 0, comm);
 
+  /* ea: */ 
   /* free buffer */
   if (buf != NULL) {
     delete buf;
@@ -144,7 +181,7 @@ static void list_send(list<callpath_count_t>& path_list, int dest, MPI_Comm comm
 
 
 /* receive and unpack a list of callpath_count items from specified source process */
-static void list_recv(list<callpath_count_t>& path_list, int src, MPI_Comm comm)
+static void list_recv(list<callpath_count>& path_list, int src, MPI_Comm comm)
 {
   MPI_Status status;
 
@@ -152,6 +189,7 @@ static void list_recv(list<callpath_count_t>& path_list, int src, MPI_Comm comm)
   int pack_size = 0;
   PMPI_Recv(&pack_size, 1, MPI_INT, src, 0, comm, &status);
 
+  /* ea: */ 
   /* allocate memory */
   void* buffer = NULL;
   char* buf = NULL; 
@@ -179,12 +217,7 @@ static void list_recv(list<callpath_count_t>& path_list, int src, MPI_Comm comm)
       PMPI_Unpack(buffer, pack_size, &position, &count, 1, MPI_INT, comm);
 
       /* create a new callpath_count elem and insert into the list */
-      /* ea: Todo: we don't need dynamic allocation of 'elem', 
-	 static allocation should suffice and has the added benefit that
-	 freeing memory is not explicitly required. 
-	 From C++ STL: push_back(x):  
-	 The content of this new element is initialized to a *copy* of x */ 
-      callpath_count_t* elem = new callpath_count_t;
+      callpath_count* elem = new callpath_count;
       elem->path  = path;
       elem->count = count;
       path_list.push_back(*elem);
@@ -194,6 +227,7 @@ static void list_recv(list<callpath_count_t>& path_list, int src, MPI_Comm comm)
     }
   }
   
+  /* ea: */ 
   /* free buffer */
   if (buf != NULL) {
     delete buf;
@@ -203,18 +237,17 @@ static void list_recv(list<callpath_count_t>& path_list, int src, MPI_Comm comm)
 
 /* merge list2 into list1, add new entries to list1 where needed, add count
  * fields where there is a match */
-static void list_merge(list<callpath_count_t>& list1, list<callpath_count_t>& list2)
+static void list_merge(list<callpath_count>& list1, list<callpath_count>& list2)
 {
   /* start with the first element in each list */
-  list<callpath_count_t>::iterator it_list1 = list1.begin();
-  list<callpath_count_t>::iterator it_list2 = list2.begin();
+  list<callpath_count>::iterator it_list1 = list1.begin();
+  list<callpath_count>::iterator it_list2 = list2.begin();
 
   while (it_list1 != list1.end() && it_list2 != list2.end()) {
     /* get next element from each list, since the lists are sorted in ascending order,
      * this element will be the smallest from each list */
-    callpath_count_t item1 = (*it_list1);
-    callpath_count_t item2 = (*it_list2);
-    
+    callpath_count item1 = (*it_list1);
+    callpath_count item2 = (*it_list2);
     if (compare_callpaths(item2, item1)) {
       /* list2 has smaller element, insert from list2 and move to next element in list2 */
       list1.insert(it_list1, item2);
@@ -232,7 +265,7 @@ static void list_merge(list<callpath_count_t>& list1, list<callpath_count_t>& li
 
   /* insert any remaining items in list2 to the end of list1 */
   while (it_list2 != list2.end()) {
-    callpath_count_t item2 = (*it_list2);
+    callpath_count item2 = (*it_list2);
     list1.insert(it_list1, item2);
     it_list2++;
   }
@@ -240,11 +273,23 @@ static void list_merge(list<callpath_count_t>& list1, list<callpath_count_t>& li
 
 
 /* cycle through and print each stack trace for which there is an outstanding request */
-static void mpileaks_reduce_callpaths(list<callpath_count_t> &path_list, const char* name)
+static void mpileaks_dump_outstanding()
 {
+  /* create a list of callpaths and counts */
+  list<callpath_count> path_list;
+  map<Callpath,int>::iterator it;
+  for (it = callpath2count.begin(); it != callpath2count.end(); it++) {
+    Callpath path = (*it).first;
+    int count = (*it).second;
+    callpath_count* elem = new callpath_count;
+    elem->path = path;
+    elem->count = count;
+    path_list.push_back(*elem);
+  }
+
   /* sort our list by callpath */
   path_list.sort(compare_callpaths);
-  
+
   /* receive lists from children and merge with our own */
   int mask = 0x1, src, dest;
   int receiving = 1;
@@ -253,7 +298,7 @@ static void mpileaks_reduce_callpaths(list<callpath_count_t> &path_list, const c
       /* we will receive in this step, assume the source rank exists */
       src = myrank | mask;
       if (src < np) {
-        list<callpath_count_t> recv_path_list;
+        list<callpath_count> recv_path_list;
         list_recv(recv_path_list, src, MPI_COMM_WORLD);
         list_merge(path_list, recv_path_list);
       }
@@ -272,65 +317,13 @@ static void mpileaks_reduce_callpaths(list<callpath_count_t> &path_list, const c
     /* sort callpaths by total count */
     path_list.sort(compare_counts);
 
-    if ( !path_list.empty() ) { 
-      cout << "----------------------------------------------------------------------" << endl; 
-      cout << "START SECTION: " << name << endl; 
-      cout << "----------------------------------------------------------------------" << endl; 
-      /* now print each callpath with its count */
-      list<callpath_count_t>::iterator it_list;
-      for (it_list = path_list.begin(); it_list != path_list.end(); it_list++) {
-	Callpath path = (*it_list).path;
-	int count = (*it_list).count;
-	mpileaks_print_path(path, count);
-      }
-      cout << "----------------------------------------------------------------------" << endl; 
-      cout << "END SECTION: " << name << endl; 
-      cout << "----------------------------------------------------------------------" << endl; 
+    /* now print each callpath with its count */
+    list<callpath_count>::iterator it_list;
+    for (it_list = path_list.begin(); it_list != path_list.end(); it_list++) {
+      Callpath path = (*it_list).path;
+      int count = (*it_list).count;
+      mpileaks_print_path(path, count);
     }
-  }
-}
-
-
-/* cycle through and print each stack trace for which there is an outstanding request */
-static void mpileaks_dump_outstanding()
-{
-  list<Callpath2Count*>::iterator it; 
-  list<callpath_count_t> path_list; 
-  
-  if (myrank == 0) {
-    cout << "----------------------------------------------------------------------" << endl; 
-    cout << "mpileaks: START REPORT -----------------------------------------------" << endl; 
-    cout << "----------------------------------------------------------------------" << endl; 
-  }
-
-  /* Gather all (callpath,count) pairs from all Handle2CPC objects
-     and store into a list. 
-     'mpileaks_reduce_callpaths' can be called such that the user
-     report is organized by type of leaks (e.g., MPI_Request, MPI_File) 
-     or by count. Currently organizing report by 'count'. */ 
-  path_list.clear(); 
-  for ( it = h2cpc_objs->begin(); it != h2cpc_objs->end(); it++ ) { 
-    (*it)->get_definite_leaks( path_list ); 
-  }
-  mpileaks_reduce_callpaths(path_list, "LEAKED OBJECTS");
-  
-  path_list.clear(); 
-  for ( it = h2cpc_objs->begin(); it != h2cpc_objs->end(); it++ ) { 
-    (*it)->get_possible_leaks( path_list ); 
-  }
-  mpileaks_reduce_callpaths(path_list, "POSSIBLY LEAKED OBJECTS");
-  
-  path_list.clear(); 
-  for ( it = h2cpc_objs->begin(); it != h2cpc_objs->end(); it++ ) { 
-    (*it)->get_missing_alloc_leaks( path_list ); 
-  }
-  mpileaks_reduce_callpaths(path_list, "ALLOCATION CALL UNKNOWN");
-  
-
-  if (myrank == 0) {
-    cout << "----------------------------------------------------------------------" << endl; 
-    cout << "mpileaks: END REPORT -------------------------------------------------" << endl; 
-    cout << "----------------------------------------------------------------------" << endl; 
   }
 }
 
@@ -344,13 +337,6 @@ int MPI_Init(int* argc, char** argv[])
   int rc = PMPI_Init(argc, argv);
   PMPI_Comm_rank(MPI_COMM_WORLD, &myrank);
   PMPI_Comm_size(MPI_COMM_WORLD, &np);
-
-  /* read in the depth of the stack trace that we should capture,
-   * -1 means there is no limit */
-  char* value;
-  if ((value = getenv("MPILEAKS_STACK_DEPTH")) != NULL) {
-    depth = atoi(value);
-  }
 
   /* we wait to create our runtime object until after MPI_Init,
    * because it registers the SIGSEGV signal within stackwalker

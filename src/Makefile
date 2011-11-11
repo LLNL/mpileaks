@@ -37,40 +37,40 @@ LEAKS_OBJS = mpileaks.o comm.o datatype.o errhandler.o fileio.o group.o info.o k
 all: $(MPILEAKS_LIB) $(TESTS)
 
 
-mpileaks.o: mpileaks.cpp 
+mpileaks.o: mpileaks.cpp callpath2count.h 
 	$(CC) $(OPT) $(LEAKS_FLAGS) $(LEAKS_INCLUDES) -c -o $@ mpileaks.cpp
 
-comm.o: comm.cpp mpileaks.h
+comm.o: comm.cpp mpileaks.h callpath2count.h 
 	$(CC) $(OPT) $(LEAKS_FLAGS) $(LEAKS_INCLUDES) -c -o $@ comm.cpp
 
-datatype.o: datatype.cpp mpileaks.h
+datatype.o: datatype.cpp mpileaks.h callpath2count.h 
 	$(CC) $(OPT) $(LEAKS_FLAGS) $(LEAKS_INCLUDES) -c -o $@ datatype.cpp
 
-errhandler.o: errhandler.cpp mpileaks.h
+errhandler.o: errhandler.cpp mpileaks.h callpath2count.h 
 	$(CC) $(OPT) $(LEAKS_FLAGS) $(LEAKS_INCLUDES) -c -o $@ errhandler.cpp
 
-fileio.o: fileio.cpp mpileaks.h
+fileio.o: fileio.cpp mpileaks.h callpath2count.h 
 	$(CC) $(OPT) $(LEAKS_FLAGS) $(LEAKS_INCLUDES) -c -o $@ fileio.cpp
 
-group.o: group.cpp mpileaks.h
+group.o: group.cpp mpileaks.h callpath2count.h 
 	$(CC) $(OPT) $(LEAKS_FLAGS) $(LEAKS_INCLUDES) -c -o $@ group.cpp
 
-info.o: info.cpp mpileaks.h
+info.o: info.cpp mpileaks.h callpath2count.h 
 	$(CC) $(OPT) $(LEAKS_FLAGS) $(LEAKS_INCLUDES) -c -o $@ info.cpp
 
-keyval.o: keyval.cpp mpileaks.h
+keyval.o: keyval.cpp mpileaks.h callpath2count.h 
 	$(CC) $(OPT) $(LEAKS_FLAGS) $(LEAKS_INCLUDES) -c -o $@ keyval.cpp
 
-mem.o: mem.cpp mpileaks.h
+mem.o: mem.cpp mpileaks.h callpath2count.h 
 	$(CC) $(OPT) $(LEAKS_FLAGS) $(LEAKS_INCLUDES) -c -o $@ mem.cpp
 
-op.o: op.cpp mpileaks.h
+op.o: op.cpp mpileaks.h callpath2count.h 
 	$(CC) $(OPT) $(LEAKS_FLAGS) $(LEAKS_INCLUDES) -c -o $@ op.cpp
 
-request.o: request.cpp mpileaks.h
+request.o: request.cpp mpileaks.h callpath2count.h 
 	$(CC) $(OPT) $(LEAKS_FLAGS) $(LEAKS_INCLUDES) -c -o $@ request.cpp
 
-win.o: win.cpp mpileaks.h
+win.o: win.cpp mpileaks.h callpath2count.h 
 	$(CC) $(OPT) $(LEAKS_FLAGS) $(LEAKS_INCLUDES) -c -o $@ win.cpp
 
 

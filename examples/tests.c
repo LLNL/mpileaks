@@ -206,25 +206,36 @@ void group_properties(int myrank, int np)
   }
 
   if (grp1 == grp2) 
-    printf("grp1 and grp2 are the same\n"); 
+    printf("%d: grp1 and grp2 are the same\n", myrank); 
   else
-    printf("grp1 and grp2 differ\n"); 
+    printf("%d: grp1 and grp2 differ\n", myrank); 
 
   if (grp3 == grp4) 
-    printf("grp3 and grp4 are the same\n"); 
+    printf("%d: grp3 and grp4 are the same\n", myrank); 
   else
-    printf("grp3 and grp4 differ\n"); 
+    printf("%d: grp3 and grp4 differ\n", myrank); 
 
   if (grp5 == MPI_GROUP_EMPTY)
-    printf("grp5 is MPI_GROUP_EMPTY\n"); 
+    printf("%d: grp5 is MPI_GROUP_EMPTY\n", myrank); 
   else
-    printf("grp5 is not MPI_GROUP_EMPTY\n"); 
+    printf("%d: grp5 is not MPI_GROUP_EMPTY\n", myrank); 
 
   if (comm3 != MPI_COMM_NULL) {
     if (grp6 == grp7) 
-      printf("grp6 and grp7 are the same\n"); 
+      printf("%d: grp6 and grp7 are the same\n", myrank); 
     else
-      printf("grp6 and grp7 differ\n"); 
+      printf("%d: grp6 and grp7 differ\n", myrank); 
+  }
+
+  /* grp6 is equal to grp3 and grp7 */ 
+  if (comm3 != MPI_COMM_NULL) {
+    printf("%d: grp6 == grp1: %d\n", myrank, (grp6 == grp1)); 
+    printf("%d: grp6 == grp2: %d\n", myrank, (grp6 == grp2)); 
+    printf("%d: grp6 == grp3: %d\n", myrank, (grp6 == grp3)); 
+    printf("%d: grp6 == grp4: %d\n", myrank, (grp6 == grp4)); 
+    printf("%d: grp6 == grp5: %d\n", myrank, (grp6 == grp5)); 
+    printf("%d: grp6 == grp6: %d\n", myrank, (grp6 == grp6)); 
+    printf("%d: grp6 == grp7: %d\n", myrank, (grp6 == grp7)); 
   }
 
   MPI_Group_free(&grp1); 
@@ -235,6 +246,7 @@ void group_properties(int myrank, int np)
   if (comm3 != MPI_COMM_NULL) {
     MPI_Group_free(&grp6); 
     MPI_Group_free(&grp7); 
+    //    MPI_Comm_free(&comm3); 
   }
 }
 
@@ -327,7 +339,7 @@ int main(int argc, char *argv[])
   datatypes(myrank, np); 
   errhandlers(myrank, np);
   fileio(myrank, np); 
-  groups(myrank, np);
+  //  groups(myrank, np);
   infos(myrank, np);
   keyvals(myrank, np);
   persistent(myrank, np); 

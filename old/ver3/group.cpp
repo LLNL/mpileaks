@@ -10,7 +10,7 @@
  * instantiated. This is necessary since it depends on the type of 
  * handle used (e.g., MPI_File). 
  */ 
-static class MPI_Group2CallpathSet : public Handle2Set<MPI_Group>
+static class MPI_Group2Callpath : public Handle2Callpath<MPI_Group>
 {
 public: 
   bool is_handle_null(MPI_Group handle) {

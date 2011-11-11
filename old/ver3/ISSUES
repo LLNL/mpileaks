@@ -1,0 +1,47 @@
+
+There are a couple of cases that perhaps we should only issue warnings
+instead of errors. However, it may not be trivial to check for these
+cases as we would have to differentiate a send call from a receive
+call. 
+
+--
+Case A. Non-blocking send. 
+
+==
+1  Isend(..., req1); 
+   ...
+   [know that the send completed successfully, perhaps we got an ack from
+   the receiver]
+   ... 
+2  Request_free(req1); 
+==
+
+Curently, without 'Request_free' an error is triggered. 
+
+
+--
+Case B. Persistent communication. 
+
+==
+1  Send_init(..., req1); 
+
+2  Start(req1); 
+4  ... 
+5  [ verify somehow that the send took place
+     without having to issue a Wait/Test call ]
+
+6  Request_free(req1)
+==
+
+This program seems fine, since 'Request_free' will deallocate the
+communication object associated with 'req1'. However, mpileaks will
+signal an error, because strictly speaking 'Start' should have been
+matched by a Wait/Test call and 'Send_init' by 'Request_free'.
+
+MPIleaks marks the error in 'Send_init' instead of 'Start' due to our
+implementation wich matches 'Request_free' to 'Start' and not to
+'Send_init' becuase we use a stack. 
+
+Note that changing Send_init by Recv_init, make this program incorrect
+and thus in the receive case mpileaks shows the error as it should. 
+
