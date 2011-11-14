@@ -1,11 +1,11 @@
 #include "mpi.h"
-#include "mpileaks.h"                 /* Handle2Callpath */ 
+#include "mpileaks.h"
 
 
 /*
  * This class tracks info objects.
  */ 
-static class MPI_Info2Callpath : public Handle2Callpath<MPI_Info>
+static class MPI_Info2CallpathSet : public Handle2Set<MPI_Info>
 {
 public: 
   bool is_handle_null(MPI_Info handle) {

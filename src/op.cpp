@@ -1,11 +1,11 @@
 #include "mpi.h"
-#include "mpileaks.h"                 /* Handle2Callpath */ 
+#include "mpileaks.h"
 
 
 /*
  * Track allocation and freeing of user-defined reduction ops.
  */ 
-static class MPI_Op2Callpath : public Handle2Callpath<MPI_Op>
+static class MPI_Op2CallpathSet : public Handle2Set<MPI_Op>
 {
 public: 
   bool is_handle_null(MPI_Op handle) {

@@ -138,7 +138,8 @@ static void list_send(list<callpath_count_t>& path_list, int dest, MPI_Comm comm
 
   /* free buffer */
   if (buf != NULL) {
-    delete buf;
+    delete[] buf;
+    buf = NULL;
   }
 }
 
@@ -178,16 +179,11 @@ static void list_recv(list<callpath_count_t>& path_list, int src, MPI_Comm comm)
       int count;
       PMPI_Unpack(buffer, pack_size, &position, &count, 1, MPI_INT, comm);
 
-      /* create a new callpath_count elem and insert into the list */
-      /* ea: Todo: we don't need dynamic allocation of 'elem', 
-	 static allocation should suffice and has the added benefit that
-	 freeing memory is not explicitly required. 
-	 From C++ STL: push_back(x):  
-	 The content of this new element is initialized to a *copy* of x */ 
-      callpath_count_t* elem = new callpath_count_t;
-      elem->path  = path;
-      elem->count = count;
-      path_list.push_back(*elem);
+      /* insert an item for this callpath/count into our list */
+      callpath_count_t elem;
+      elem.path  = path;
+      elem.count = count;
+      path_list.push_back(elem);
 
       /* decrement out count by one */
       size--;
@@ -196,7 +192,8 @@ static void list_recv(list<callpath_count_t>& path_list, int src, MPI_Comm comm)
   
   /* free buffer */
   if (buf != NULL) {
-    delete buf;
+    delete[] buf;
+    buf = NULL;
   }
 }
 
@@ -352,13 +349,6 @@ int MPI_Init(int* argc, char** argv[])
     depth = atoi(value);
   }
 
-  /* we wait to create our runtime object until after MPI_Init,
-   * because it registers the SIGSEGV signal within stackwalker
-   * and we want to override any previous registrations for this
-   * signal by MPI  */
-  if (runtime == NULL) {
-    runtime = new CallpathRuntime;
-  }
   enabled = 1;
   return rc;
 }
@@ -385,5 +375,12 @@ int MPI_Finalize()
   mpileaks_dump_outstanding();
   enabled = 0;
   int rc = PMPI_Finalize();
+
+  /* free off our runtime object */
+  if (runtime != NULL) {
+    delete runtime;
+    runtime = NULL;
+  }
+
   return rc;
 }

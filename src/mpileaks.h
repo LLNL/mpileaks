@@ -57,6 +57,14 @@ public:
    * Auxiliary functions
    ******************************************************/
   Callpath get_callpath(size_t start) {
+    /* we wait to create our runtime object as late as possible
+     * because it registers the SIGSEGV signal within stackwalker
+     * and we want to override any previous registrations for this
+     * signal, in particular by MPI  */
+    if (runtime == NULL) {
+      runtime = new CallpathRuntime;
+    }
+
     /* get the current call path */
     Callpath path = runtime->doStackwalk();
 
@@ -110,7 +118,7 @@ public:
 	  Callpath path = get_callpath(4);
 	  
 	  /* increase callpath count for this free call */
-	  increase_count(missing_alloc, path); 
+	  increase_count(missing_alloc, path, 1); 
         }
       }
     }
@@ -143,12 +151,13 @@ template<class T> class Handle2Set : public Handle2CPC< T, pair<set<Callpath>,in
  public:
   void add_callpath(T handle, Callpath path) {
     /* locate map entry associated with handle */ 
-    if ( this->handle2cpc.find(handle) != this->handle2cpc.end() ) 
+    if ( this->handle2cpc.find(handle) != this->handle2cpc.end() ) {
       /* handle found */ 
       this->handle2cpc[handle].second++;
-    else 
+    } else {
       /* handle not found, initialize count */ 
       this->handle2cpc[handle].second = 1;
+    }
     
     /* insert path to the set of callpaths associated with handle */ 
     /* map[handle].set_of_callpaths.insert */ 
@@ -162,7 +171,7 @@ template<class T> class Handle2Set : public Handle2CPC< T, pair<set<Callpath>,in
       Callpath path = this->get_callpath(4);
       
       /* increase callpath count for this free call */
-      increase_count(this->missing_alloc, path); 
+      this->increase_count(this->missing_alloc, path, 1); 
       
       /* clean-up map entry */ 
       if ( !it->second.first.empty() ) { 
@@ -181,15 +190,17 @@ template<class T> class Handle2Set : public Handle2CPC< T, pair<set<Callpath>,in
     }
   }
 
+  /* identify all handles that map to a single callpath,
+   * and for the union of all such callpaths, sum the total outstanding count by callpath */
   int get_definite_leaks(list<callpath_count_t> &lst) {
-    int count = 0; 
-    myiterator it_map; 
-    set<Callpath>::iterator it_set; 
-    callpath_count_t entry;   
+    /* we use this to sum counts by callpath */
+    map<Callpath,int> tmp_callpath2count;
     
     /* Iterate over map of handle to set of callpaths */ 
+    myiterator it_map; 
     for ( it_map = this->handle2cpc.begin(); 
-	  it_map != this->handle2cpc.end(); it_map++ ) { 
+	  it_map != this->handle2cpc.end(); it_map++ )
+    { 
       
       /* If there's only one leak source (definite) */ 
       if ( it_map->second.first.size() == 1 ) {
@@ -197,25 +208,27 @@ template<class T> class Handle2Set : public Handle2CPC< T, pair<set<Callpath>,in
 	cerr << "ea: definite: setsize = " << it_map->second.first.size() 
 	     << " count = " << it_map->second.second << endl; 
 #endif 
-	entry.path = *(it_map->second.first.begin()); 
-	entry.count = it_map->second.second; 
-	lst.push_back( entry ); 
-	count++; 
+	Callpath path = *(it_map->second.first.begin()); 
+	int count = it_map->second.second; 
+        this->increase_count(tmp_callpath2count, path, count);
       }
     }
-    
-    return count; 
+
+    /* now build a list of counts by callpath */
+    return this->map2list(tmp_callpath2count, lst);
   }
   
+  /* identify all handles that map to more than one callpath,
+   * and for the union of all such callpaths, sum the total outstanding count by callpath */
   int get_possible_leaks(list<callpath_count_t> &lst) {
-    int count = 0; 
-    myiterator it_map; 
-    set<Callpath>::iterator it_set; 
-    callpath_count_t entry;   
-    
+    /* we use this to sum counts by callpath */
+    map<Callpath,int> tmp_callpath2count;
+
     /* Iterate over map of handle to set of callpaths */ 
+    myiterator it_map; 
     for ( it_map = this->handle2cpc.begin(); 
-	  it_map != this->handle2cpc.end(); it_map++ ) { 
+	  it_map != this->handle2cpc.end(); it_map++ )
+    { 
       
       /* If there's more than one possible leak source */ 
       if ( it_map->second.first.size() > 1 ) { 
@@ -224,18 +237,19 @@ template<class T> class Handle2Set : public Handle2CPC< T, pair<set<Callpath>,in
 	     << " count = " << it_map->second.second << endl; 
 #endif 
 	/* Iterate over the set of callpaths */ 
+        set<Callpath>::iterator it_set; 
 	for ( it_set = it_map->second.first.begin(); 
-	      it_set != it_map->second.first.end(); it_set++ ) { 
+	      it_set != it_map->second.first.end(); it_set++ )
+        { 
 	  /* Flatten the set of callpaths into a list with the set's count */ 
-	  entry.path = *it_set; 
-	  entry.count = it_map->second.second; 
-	  lst.push_back( entry ); 
-	  count++; 
+	  Callpath path = *it_set; 
+	  int count = it_map->second.second; 
+          this->increase_count(tmp_callpath2count, path, count);
 	}
       }
     }
     
-    return count; 
+    return this->map2list(tmp_callpath2count, lst); 
   }
 
   /* for debugging purposes */ 
@@ -272,7 +286,7 @@ template<class T> class Handle2Callpath : public Handle2CPC<T, Callpath>
 
     if ( it == this->handle2cpc.end() ) { 
       this->handle2cpc[handle] = path; 
-      this->increase_count( callpath2count, path ); 
+      this->increase_count( callpath2count, path, 1 ); 
     } else {
       /* found handle! */ 
       cerr << "mpileaks: Internal Error: Handle2Callpath: "
@@ -284,7 +298,7 @@ template<class T> class Handle2Callpath : public Handle2CPC<T, Callpath>
 
   void remove_callpath(myiterator it) {
     /* get callpath and update path in callpath2count */ 
-    this->decrease_count( callpath2count, it->second );
+    this->decrease_count( callpath2count, it->second, 1 );
     /* rm entry from handle to callpath_container */ 
     this->handle2cpc.erase( it ); 
   }
@@ -322,13 +336,13 @@ template<class T> class Handle2Stack : public Handle2CPC< T, stack<Callpath> >
  public:
   void add_callpath(T handle, Callpath path) {
     this->handle2cpc[handle].push( path ); 
-    this->increase_count( callpath2count, path ); 
+    this->increase_count( callpath2count, path, 1 ); 
   }
   
   void remove_callpath(myiterator it) {
     if ( !it->second.empty() ) {
       /* pop callpath from stack and update callpath2count */ 
-      this->decrease_count( callpath2count, it->second.top() );
+      this->decrease_count( callpath2count, it->second.top(), 1 );
       it->second.pop(); 
       /* if stack is empty, delete entry */ 
       if ( it->second.empty() ) {
@@ -339,7 +353,7 @@ template<class T> class Handle2Stack : public Handle2CPC< T, stack<Callpath> >
        * capture the callpath of the free call to report later */
       Callpath path = this->get_callpath(4);
       /* increase callpath count for this free call */
-      this->increase_count( this->missing_alloc, path );
+      this->increase_count( this->missing_alloc, path, 1 );
     }
   }
   

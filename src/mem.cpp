@@ -1,5 +1,5 @@
 #include "mpi.h"
-#include "mpileaks.h"                 /* Handle2Callpath */ 
+#include "mpileaks.h"
 
 
 #if MPI_VERSION > 1

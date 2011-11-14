@@ -40,40 +40,49 @@ class Callpath2Count
      Todo: there may be a race condition if instances of this class are 
      allocated in parallel. */ 
   Callpath2Count() {
-    if ( h2cpc_objs == NULL )
+    if ( h2cpc_objs == NULL ) {
       h2cpc_objs = new list<Callpath2Count*>; 
+    }
     
     h2cpc_objs->push_back( this );
   }
   
   /* Virtual destructor required to avoid compiler warning */ 
   virtual ~Callpath2Count() {
+    /* TODO: remove ourselves from h2cpc_objs, and if empty, delete this object */
   }
     
   
   /******************************************************
    * Auxiliary functions to be used by derived classes
    ******************************************************/
-  void increase_count(map<Callpath,int> &callpath2count, Callpath path) {
+  void increase_count(map<Callpath,int> &callpath2count, Callpath path, int count) {
     /* search for this path in our stacktrace-to-count map */
     map<Callpath,int>::iterator it_path2count = callpath2count.find(path);
     if ( it_path2count != callpath2count.end() ) {
       /* found it, increment the count for this path */
-      it_path2count->second++;
+      it_path2count->second += count;
     } else {
-      /* not found, so insert the path with a count of 1 */
-      callpath2count[path] = 1;
+      /* not found, so insert the path with the specified count */
+      callpath2count[path] = count;
     } 
   }
   
-  void decrease_count(map<Callpath,int> &callpath2count, Callpath path) {
+  void decrease_count(map<Callpath,int> &callpath2count, Callpath path, int count) {
     /* now lookup path in path2count */
     map<Callpath,int>::iterator it_path2count = callpath2count.find(path);
     if (it_path2count != callpath2count.end()) {
-      if (it_path2count->second > 1) {
+      if (it_path2count->second - count > 1) {
 	/* decrement the count for this path */
-	it_path2count->second--;
+	it_path2count->second -= count;
       } else {
+        if (it_path2count->second - count < 0) {
+          /* we subtracted more than we ever added */
+          cerr << "mpileaks: Internal Error: Callpath2Count: "
+               << "negative count detected" 
+               << endl;
+        }
+
 	/* remove the entry from the path-to-count map */
 	callpath2count.erase(it_path2count);
       }
@@ -90,7 +99,7 @@ class Callpath2Count
     map<Callpath,int>::iterator it;
     
     for (it = callpath2count.begin(); it != callpath2count.end(); it++) {
-      entry.path = it->first;
+      entry.path  = it->first;
       entry.count = it->second;
       lst.push_back( entry );
       count++; 

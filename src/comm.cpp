@@ -1,5 +1,5 @@
 #include "mpi.h"
-#include "mpileaks.h"                 /* Handle2Callpath */ 
+#include "mpileaks.h"
 
 
 /*
@@ -10,7 +10,7 @@
  * instantiated. This is necessary since it depends on the type of 
  * handle used (e.g., MPI_File). 
  */ 
-static class MPI_Comm2Callpath : public Handle2Callpath<MPI_Comm>
+static class MPI_Comm2CallpathSet : public Handle2Set<MPI_Comm>
 {
 public: 
   bool is_handle_null(MPI_Comm handle) {

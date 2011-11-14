@@ -1,12 +1,12 @@
 #include "mpi.h"
-#include "mpileaks.h"                 /* Handle2Callpath */ 
+#include "mpileaks.h"
 
 
 /*
  * Track allocation and freeing of attributes.  We track attributes
  * for comms,windows, and files separately, but all within this file.
  */ 
-static class MPI_Keyval2Callpath : public Handle2Callpath<int>
+static class MPI_Keyval2CallpathSet : public Handle2Set<int>
 {
 public: 
   bool is_handle_null(int handle) {

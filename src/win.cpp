@@ -1,5 +1,5 @@
 #include "mpi.h"
-#include "mpileaks.h"                 /* Handle2Callpath */ 
+#include "mpileaks.h"
 
 
 #if MPI_VERSION > 1
@@ -11,7 +11,7 @@
 /*
  * This class tracks window objects.
  */ 
-static class MPI_Win2Callpath : public Handle2Callpath<MPI_Win>
+static class MPI_Win2CallpathSet : public Handle2Set<MPI_Win>
 {
 public: 
   bool is_handle_null(MPI_Win handle) {
