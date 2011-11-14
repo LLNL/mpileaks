@@ -1,3 +1,0 @@
-
-This is the first version that implements persistent communication using a 
-stack of callpaths. It is hard-coded to use handles of type MPI_Request
