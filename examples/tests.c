@@ -2,6 +2,15 @@
 #include <unistd.h>
 #include "mpi.h"
 
+/* Copyright (c) 2012, Lawrence Livermore National Security, LLC.
+ * Produced at the Lawrence Livermore National Laboratory.
+ * Written by Adam Moody <moody20@llnl.gov> and Edgar A. Leon <leon@llnl.gov>.
+ * LLNL-CODE-557543.
+ * All rights reserved.
+ * This file is part of the mpileaks tool package.
+ * For details, see https://github.com/hpc/mpileaks
+ * Please also read this file: LICENSE.TXT. */
+
 /*******************************************************
  * The functions below are intentionally leaky to  
  * check execution of mpileaks for these cases. 

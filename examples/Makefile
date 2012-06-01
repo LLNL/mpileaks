@@ -1,7 +1,5 @@
 
 # MPILEAKS_LIB, MPILEAKS_LIBDIR
-include ../defs.mk
-
 CC = mpicc
 CFLAGS = -g -O0 -Wall -Werror
 
@@ -17,7 +15,7 @@ all: $(EXAMPLES)
 $(EXAMPLES): $(addsuffix .c,$(EXAMPLES))
 
 run: $(EXAMPLES)
-	MPILEAKS_SO=$(MPILEAKS_LIBDIR)/$(MPILEAKS_LIB) ../scripts/srun-mpileaks -ppdebug -n2 tests
+	../scripts/srun-mpileaks -ppdebug -n2 tests
 
 clean: 
 	rm -rf *~ *.o $(EXAMPLES) testfile.[0-9]*

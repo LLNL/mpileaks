@@ -3,10 +3,10 @@
 Introduction
 ===================================================================
 
-MPILEAKS is a library to detect memory leaks from MPI objects. Using
+MPILEAKS is a library to detect application leaks of MPI objects. Using
 the MPI profiling interface, it keeps track of all the MPI calls that
 "allocate" and "free" objects.  At the end of the program, through
-MPI_Finalize or before completion using MPI_PControl, any unfreed
+MPI_Finalize or before completion using MPI_Pcontrol, any unfreed
 objects are identified and reported. 
 
 MPILEAKS displays the stack trace where the leak occurred. The trace
@@ -15,11 +15,13 @@ MPI tasks may have the same leak, MPILEAKS displays a count
 associated with each stack trace that computes the total number of
 objects leaked across all processes for a given stack trace.
 To get stack traces, MPILEAKS internally uses Todd Gamblin's Callpath
-class. 
+class.
+
+https://github.com/tgamblin/callpath 
 
 To acquire stack traces, applications must be compiled with the
 '-g' option. However, it is not necessary to link to MPILEAKS to
-use it.  One may select to use it at run time an existing executables
+use it.  One may select to use it at run time with existing executables
 (see using MPILEAKS below). 
 
 The following objects are tracked:
@@ -53,21 +55,20 @@ The following objects are tracked:
 Building and using MPILEAKS
 ===================================================================
 
-1. Edit the files:  
-   defs.mk 
+1. Edit the file:
    src/Makefile
 
-2. Create libmpileaks.so in the path specified by 'defs.mk': 
+2. Create libmpileaks.so in the path specified by 'defs.mk':
    cd src; make 
 
-3. To build a simple MPI program with leaks: 
+3. To build a simple MPI program with leaks:
    cd examples; make 
    Note that it is not necessary to link the program with the mpileaks
    library. Thus, rebuilding an MPI program to use this tool is not
    necessary, simply replace your 'srun' command with
    'scripts/srun-mpileaks' (see next step). 
 
-4. To run the example: 
+4. To run the example:
    cd examples; make run
 
 By default, mpileaks reports a single line from the stacktrace,
@@ -130,39 +131,3 @@ int MPI_File_close(MPI_File *fh)
   
   return rc; 
 }
-
-
-===================================================================
-Future Work
-===================================================================
-
-1. Provide a graphical interface showing the callpath tree. Each
-   node (function call) shows the number of leaks detected across all
-   MPI tasks. May need to talk to John G. about ToolGear, or Greg
-   L. about Stat's graphical interface. 
-
-2. Install in /usr/global/tools/mpileaks
-
-3. Measure MPILEAKS overhead for large programs in terms of execution
-   time and memory usage. 
-
-4. Ask a selected set of users to test the tool and get feedback. 
-
-5. Document any leaks found in real applications. 
-
-6. Write it up into a tech report / paper. 
-
-7. Experience
-
-* 2011-08-02 David Larson
-Fortran code, was calling MPI_Waitall to wait for 4 requests in an array of 8,
-but was accidentally waiting on the wrong 4.
-
-Initially had trouble because MPI was overriding a signal that stackwalker needed
-which was set when Callpath runtime was initialized.  Fixed by initializaing runtime
-after MPI_Init.
-
-* 2011-10-05 Britton Olsen
-Fortran code, had MPI_Isend without matching wait call.
-Also identified two leaked groups in MPI itself within MPI_Comm_create.
-Claimed that two people searched for a week and couldn't find the leak.

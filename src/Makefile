@@ -2,17 +2,18 @@
 #############################################################
 
 # MPILEAKS_LIB, MPILEAKS_LIBDIR
-include ../defs.mk
+MPILEAKS_LIB = libmpileaks
+PREFIX = ..
 
-TOOLS = /usr/global/tools
 # Mpileaks dependencies:
-#CALLPATH = $(TOOLS)/mpileaks
-CALLPATH = $(TOOLS)/mpileaks/mvapich-gnu
-#CALLPATH = $(TOOLS)/mpileaks/mvapich-intel
-#CALLPATH = $(TOOLS)/mpileaks/mvapich2-gnu
-CHAOS4IB = $(TOOLS)/adept-utils/chaos_4_x86_64_ib
-STACKWALKER = $(TOOLS)/dyninst/stackwalker/chaos_4_x86_64_ib/stackwalker-2.0
+# path to Callpath install directory
+CALLPATH = 
 
+# path to other Callpath dependencies
+CHAOS4IB = 
+
+# path to Stackwalker install directory
+STACKWALKER = 
 
 #############################################################
 
@@ -21,9 +22,7 @@ STACKWALKER = $(TOOLS)/dyninst/stackwalker/chaos_4_x86_64_ib/stackwalker-2.0
 # version with callpaths is used. 
 PERSISTENT_COMM = 1
 
-CC = mpig++
-#CC = mpiicpc
-#CC = mpicxx
+CC = mpicxx
 OPT = -Wall -Werror
 LEAKS_FLAGS = -g -O0 -fPIC
 
@@ -34,7 +33,7 @@ TESTS =
 LEAKS_OBJS = mpileaks.o comm.o datatype.o errhandler.o fileio.o group.o info.o keyval.o mem.o op.o request.o win.o
 
 
-all: $(MPILEAKS_LIB) $(TESTS)
+all: $(MPILEAKS_LIB).so $(TESTS)
 
 
 mpileaks.o: mpileaks.cpp callpath2count.h 
@@ -74,17 +73,17 @@ win.o: win.cpp mpileaks.h callpath2count.h
 	$(CC) $(OPT) $(LEAKS_FLAGS) $(LEAKS_INCLUDES) -c -o $@ win.cpp
 
 
-$(MPILEAKS_LIB): $(LEAKS_OBJS)
-	$(CC) $(LEAKS_FLAGS) -shared -Wl,-soname,$(MPILEAKS_LIB).1 -o $@ $(LEAKS_OBJS) \
+$(MPILEAKS_LIB).so: $(LEAKS_OBJS)
+	$(CC) $(LEAKS_FLAGS) -shared -Wl,-soname,$(MPILEAKS_LIB).so.1 -o $@ $(LEAKS_OBJS) \
 	-Wl,-rpath,$(CALLPATH)/lib -L$(CALLPATH)/lib -lcallpath \
 	-Wl,-rpath,$(STACKWALKER)/lib -L$(STACKWALKER)/lib -lcommon \
 	-Wl,-rpath,$(CHAOS4IB)/lib -L$(CHAOS4IB)/lib
-	if [ ! -d "$(MPILEAKS_LIBDIR)" ]; then mkdir -p "$(MPILEAKS_LIBDIR)"; fi 
-	cp $@ $(MPILEAKS_LIBDIR)/
-	cd $(MPILEAKS_LIBDIR); chown $(USER):tools $@; reln -g tools $@ $@.1
+	if [ ! -d "$(PREFIX)/lib" ]; then mkdir -p "$(PREFIX)/lib"; fi 
+	cp $@ $(PREFIX)/lib/
+	cd $(PREFIX)/lib; chown $(USER):tools $@; reln -g tools $@ $@.1
 
 clean: 
-	rm -rf *~ *.o $(MPILEAKS_LIB)* $(TESTS)
+	rm -rf *~ *.o $(MPILEAKS_LIB).so* $(TESTS)
 
 veryclean: clean
-	rm -rf $(MPILEAKS_LIBDIR)/$(MPILEAKS_LIB)*
+	rm -rf $(PREFIX)/lib/

@@ -1,3 +1,12 @@
+/* Copyright (c) 2012, Lawrence Livermore National Security, LLC.
+ * Produced at the Lawrence Livermore National Laboratory.
+ * Written by Adam Moody <moody20@llnl.gov> and Edgar A. Leon <leon@llnl.gov>.
+ * LLNL-CODE-557543.
+ * All rights reserved.
+ * This file is part of the mpileaks tool package.
+ * For details, see https://github.com/hpc/mpileaks
+ * Please also read this file: LICENSE.TXT. */
+
 #include "mpi.h"
 #include "mpileaks.h"
 
