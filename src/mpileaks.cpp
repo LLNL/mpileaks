@@ -29,6 +29,12 @@ int enabled = 0;
 /* depth=1 shows single line of source code, -1 means entire trace */
 int depth = 1; 
 
+/* number of lower level routines to chop out of stack trace,
+ * this removes functions internal to mpileaks itself, but
+ * we allow the caller to override this to remove even more,
+ * for example Fortran MPI wrappers that invoke C calls */
+int chop = 4;
+
 CallpathRuntime *runtime = NULL;
 
 /* h2cpc_objs stores pointers to all objects derived from Callpath2Count.
@@ -347,15 +353,27 @@ static void mpileaks_dump_outstanding()
 
 int MPI_Init(int* argc, char** argv[])
 {
+  char* value;
+
   int rc = PMPI_Init(argc, argv);
   PMPI_Comm_rank(MPI_COMM_WORLD, &myrank);
   PMPI_Comm_size(MPI_COMM_WORLD, &np);
 
   /* read in the depth of the stack trace that we should capture,
    * -1 means there is no limit */
-  char* value;
   if ((value = getenv("MPILEAKS_STACK_DEPTH")) != NULL) {
     depth = atoi(value);
+  }
+
+  /* allow user to override the number of lower-level stack
+   * trace entries to remove, this hides routines internal to
+   * mpileaks or MPI so that the first function reported is
+   * the last one to leave the user's code */
+  if ((value = getenv("MPILEAKS_STACK_START")) != NULL) {
+    chop = atoi(value);
+    if (chop < 0) {
+      chop = 0;
+    }
   }
 
   enabled = 1;

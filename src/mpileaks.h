@@ -24,6 +24,7 @@ using namespace std;
 /* Todo: need to encapsulate globals into one struct */ 
 extern int enabled;
 extern int depth;
+extern int chop;
 extern CallpathRuntime *runtime;
 
 
@@ -104,8 +105,8 @@ public:
     if (enabled) {
       if ( !is_handle_null(handle) ) {
 	/* get the call path where this request was allocated,
-         * chop off 4 layers of mpileaks calls */
-	Callpath path = get_callpath(4);
+         * chop layers of mpileaks and internal MPI calls */
+	Callpath path = get_callpath(chop);
 	
 	/* associate handle with callpath */ 	
 	add_callpath(handle, path); 
@@ -124,7 +125,7 @@ public:
 	else {
 	  /* Non-null handle being freed but not found in handle2cpc,
            * capture the callpath of the free call to report later */
-	  Callpath path = get_callpath(4);
+	  Callpath path = get_callpath(chop);
 	  
 	  /* increase callpath count for this free call */
 	  increase_count(missing_alloc, path, 1); 
@@ -177,7 +178,7 @@ template<class T> class Handle2Set : public Handle2CPC< T, pair<set<Callpath>,in
     if ( it->second.first.empty() || it->second.second <= 0 ) {
       /* handle being freed but no callpaths in set,
        * capture the callpath of the free call to report later */
-      Callpath path = this->get_callpath(4);
+      Callpath path = this->get_callpath(chop);
       
       /* increase callpath count for this free call */
       this->increase_count(this->missing_alloc, path, 1); 
@@ -360,7 +361,7 @@ template<class T> class Handle2Stack : public Handle2CPC< T, stack<Callpath> >
     } else {
       /* handle being freed without any associated callpaths; 
        * capture the callpath of the free call to report later */
-      Callpath path = this->get_callpath(4);
+      Callpath path = this->get_callpath(chop);
       /* increase callpath count for this free call */
       this->increase_count( this->missing_alloc, path, 1 );
     }

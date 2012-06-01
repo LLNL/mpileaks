@@ -3,26 +3,24 @@
 Introduction
 ===================================================================
 
-MPILEAKS is a library to detect application leaks of MPI objects. Using
-the MPI profiling interface, it keeps track of all the MPI calls that
-"allocate" and "free" objects.  At the end of the program, through
-MPI_Finalize or before completion using MPI_Pcontrol, any unfreed
-objects are identified and reported. 
+mpileaks is a library to detect application leaks of MPI objects. Using
+the MPI profiling interface, it keeps track of all MPI calls that
+"allocate" and "free" objects.  Any unfreed objects are identified and
+reported either during MPI_Finalize or whenever MPI_Pcontrol is called.
 
-MPILEAKS displays the stack trace where the leak occurred. The trace
+mpileaks displays the stack trace where the leak occurred. The trace
 includes file name and line number of the allocation call. Since many
-MPI tasks may have the same leak, MPILEAKS displays a count
-associated with each stack trace that computes the total number of
-objects leaked across all processes for a given stack trace.
-To get stack traces, MPILEAKS internally uses Todd Gamblin's Callpath
-class.
+MPI tasks often have the same leak, mpileaks computes and reports
+the total number of objects leaked across all processes for a given
+source code location.  To acquire stack traces, mpileaks internally
+uses Todd Gamblin's Callpath class.
 
 https://github.com/tgamblin/callpath 
 
-To acquire stack traces, applications must be compiled with the
-'-g' option. However, it is not necessary to link to MPILEAKS to
-use it.  One may select to use it at run time with existing executables
-(see using MPILEAKS below). 
+To obtain stack traces, applications must be compiled with the
+'-g' option. However, it is not necessary to link to mpileaks to
+use it.  One may select to use mpileaks at run time with existing
+executables (see using mpileaks below). 
 
 The following objects are tracked:
    x ==> supported
@@ -52,13 +50,14 @@ The following objects are tracked:
 
 
 ===================================================================
-Building and using MPILEAKS
+Building and using mpileaks
 ===================================================================
 
-1. Edit the file:
-   src/Makefile
+1. Edit the Makefile to reference the Callpath and Stackwalker
+   install locations:
+   vi src/Makefile
 
-2. Create libmpileaks.so in the path specified by 'defs.mk':
+2. Build the libmpileaks.so library:
    cd src; make 
 
 3. To build a simple MPI program with leaks:
@@ -73,9 +72,22 @@ Building and using MPILEAKS
 
 By default, mpileaks reports a single line from the stacktrace,
 but one may increase the number of lines by setting the
-$MPILEAKS_STACK_DEPTH environment variable, e.g., to get two lines:
+$MPILEAKS_STACK_DEPTH environment variable.  For example, to
+get two lines:
   epxort MPILEAKS_STACK_DEPTH=2
 To get the entire stacktrace, set this value to -1.
+
+Also, by default, mpileaks chops off the first 4 function calls
+in the stack trace, which are internal to the mpileaks library.
+One can adjust the number of functions removed from the
+initial part of the trace by setting $MPILEAKS_STACK_START to
+any non-negative integer (the default value is 4).  This feature
+is useful for MPI implementations in which the Fortran API is
+just a thin wrapper around the C API. For instance, if the
+Fortran-to-C wrapper imposes one more level of function calls
+between the application and the MPI library, one may increase
+this number from 4 to 5 to shave off this single layer so that
+the stack trace begins in application code.
 
 
 ===================================================================
