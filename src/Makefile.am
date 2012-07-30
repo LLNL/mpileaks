@@ -33,5 +33,5 @@ libmpileaks_la_SOURCES = \
   request.cpp \
   win.cpp
 libmpileaks_la_CFLAGS = $(INCLUDES)
-libmpileaks_la_LIBADD = $(MPI_CLDFLAGS) $(CALLPATH_LDFLAGS) $(CALLPATH_LIBS)
+libmpileaks_la_LIBADD = $(CALLPATH_LDFLAGS) $(CALLPATH_LIBS)
 libmpileaks_la_LDFLAGS = -avoid-version
