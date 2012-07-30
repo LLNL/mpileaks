@@ -1,10 +1,16 @@
 #!/bin/bash
 
-libmpileaks="@X_PREFIX@/lib/libmpileaks.so"
+if [ -z "$MPILEAKS_STACK_DEPTH" ] ; then
+  export MPILEAKS_STACK_DEPTH=1
+fi
 
-# for C codes this is set to 4, but we need to pick
-# off one more layer of Fortran-to-C to get to user's
-# code in fortran apps
-export MPILEAKS_STACK_START=5
+# for C codes we pop off the 2 deepest layers
+# of the stack which point into mpileaks code,
+# we need to pop one more for fortran codes
+if [ -z "$MPILEAKS_STACK_START" ] ; then
+  export MPILEAKS_STACK_START=3
+fi
+
+libmpileaks="@X_PREFIX@/lib/libmpileaks.so"
 
 LD_PRELOAD=$libmpileaks srun "$@"
