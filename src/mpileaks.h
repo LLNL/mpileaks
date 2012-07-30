@@ -60,7 +60,7 @@ public:
    ******************************************************/
   virtual bool is_handle_null(T handle) = 0; 
   virtual void add_callpath(T handle, Callpath path) = 0; 
-  virtual void remove_callpath(myiterator it) = 0; 
+  virtual void remove_callpath(myiterator it, size_t start) = 0; 
 
 
   /******************************************************
@@ -121,7 +121,7 @@ public:
 	myiterator it = handle2cpc.find(handle);
 	if ( it != handle2cpc.end() )
 	  /* found handle entry, decrease count associated with handle */ 
-	  remove_callpath( it ); 
+	  remove_callpath(it, chop+1); 
 	else {
 	  /* Non-null handle being freed but not found in handle2cpc,
            * capture the callpath of the free call to report later */
@@ -174,11 +174,11 @@ template<class T> class Handle2Set : public Handle2CPC< T, pair<set<Callpath>,in
     this->handle2cpc[handle].first.insert( path );
   }
   
-  void remove_callpath(myiterator it) {
+  void remove_callpath(myiterator it, size_t start) {
     if ( it->second.first.empty() || it->second.second <= 0 ) {
       /* handle being freed but no callpaths in set,
        * capture the callpath of the free call to report later */
-      Callpath path = this->get_callpath(chop);
+      Callpath path = this->get_callpath(start);
       
       /* increase callpath count for this free call */
       this->increase_count(this->missing_alloc, path, 1); 
@@ -306,9 +306,10 @@ template<class T> class Handle2Callpath : public Handle2CPC<T, Callpath>
     }
   }
 
-  void remove_callpath(myiterator it) {
+  void remove_callpath(myiterator it, int start) {
     /* get callpath and update path in callpath2count */ 
     this->decrease_count( callpath2count, it->second, 1 );
+
     /* rm entry from handle to callpath_container */ 
     this->handle2cpc.erase( it ); 
   }
@@ -349,11 +350,12 @@ template<class T> class Handle2Stack : public Handle2CPC< T, stack<Callpath> >
     this->increase_count( callpath2count, path, 1 ); 
   }
   
-  void remove_callpath(myiterator it) {
+  void remove_callpath(myiterator it, int start) {
     if ( !it->second.empty() ) {
       /* pop callpath from stack and update callpath2count */ 
       this->decrease_count( callpath2count, it->second.top(), 1 );
       it->second.pop(); 
+
       /* if stack is empty, delete entry */ 
       if ( it->second.empty() ) {
 	this->handle2cpc.erase(it); 
@@ -361,7 +363,8 @@ template<class T> class Handle2Stack : public Handle2CPC< T, stack<Callpath> >
     } else {
       /* handle being freed without any associated callpaths; 
        * capture the callpath of the free call to report later */
-      Callpath path = this->get_callpath(chop);
+      Callpath path = this->get_callpath(start);
+
       /* increase callpath count for this free call */
       this->increase_count( this->missing_alloc, path, 1 );
     }
