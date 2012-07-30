@@ -1,0 +1,5 @@
+#!/bin/bash
+
+libmpileaks="@X_PREFIX@/lib/libmpileaks.so"
+
+LD_PRELOAD=$libmpileaks srun "$@"

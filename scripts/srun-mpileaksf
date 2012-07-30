@@ -1,0 +1,5 @@
+#!/bin/bash
+
+libmpileaks="/usr/local/tools/mpileaks-mvapich/lib/libmpileaks.so"
+
+LD_PRELOAD=$libmpileaks srun "$@"

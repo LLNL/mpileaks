@@ -1,0 +1,10 @@
+#!/bin/bash
+
+libmpileaks="@X_PREFIX@/lib/libmpileaks.so"
+
+# for C codes this is set to 4, but we need to pick
+# off one more layer of Fortran-to-C to get to user's
+# code in fortran apps
+export MPILEAKS_STACK_START=5
+
+LD_PRELOAD=$libmpileaks srun "$@"
