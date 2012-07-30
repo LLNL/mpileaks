@@ -31,7 +31,7 @@ public:
 int MPI_Op_create(MPI_User_function *function, int commute, MPI_Op *op)
 {
   int rc = PMPI_Op_create(function, commute, op); 
-  Op2Callpath.allocate(*op); 
+  Op2Callpath.allocate(*op, chop); 
   return rc; 
 }
 
@@ -41,7 +41,7 @@ int MPI_Op_free(MPI_Op *op)
   MPI_Op handle_copy = *op; 
   
   int rc = PMPI_Op_free(op);  
-  Op2Callpath.free(handle_copy); 
+  Op2Callpath.free(handle_copy, chop); 
   
   return rc; 
 }

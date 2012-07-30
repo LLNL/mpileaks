@@ -37,7 +37,7 @@ public:
 int MPI_Win_create(void* base, MPI_Aint size, int disp_unit, MPI_Info info, MPI_Comm comm, MPI_Win *win)
 {
   int rc = PMPI_Win_create(base, size, disp_unit, info, comm, win);
-  Win2Callpath.allocate(*win); 
+  Win2Callpath.allocate(*win, chop); 
   return rc; 
 }
 
@@ -46,7 +46,7 @@ int MPI_Win_free(MPI_Win *win)
   MPI_Win handle_copy = *win; 
   
   int rc = PMPI_Win_free(win);  
-  Win2Callpath.free(handle_copy); 
+  Win2Callpath.free(handle_copy, chop); 
   
   return rc; 
 }

@@ -36,7 +36,7 @@ int MPI_Keyval_create(
   void* extra_state)
 {
   int rc = PMPI_Keyval_create(copy_fn, delete_fn, keyval, extra_state); 
-  Commkeyval2Callpath.allocate(*keyval); 
+  Commkeyval2Callpath.allocate(*keyval, chop); 
   return rc; 
 }
 
@@ -53,7 +53,7 @@ int MPI_Comm_create_keyval(
   void *extra_state)
 {
   int rc = PMPI_Comm_create_keyval(comm_copy_attr_fn, comm_delete_attr_fn, comm_keyval, extra_state); 
-  Commkeyval2Callpath.allocate(*comm_keyval); 
+  Commkeyval2Callpath.allocate(*comm_keyval, chop); 
   return rc; 
 }
 
@@ -64,7 +64,7 @@ int MPI_Win_create_keyval(
   void *extra_state)
 {
   int rc = PMPI_Win_create_keyval(win_copy_attr_fn, win_delete_attr_fn, win_keyval, extra_state);
-  Winkeyval2Callpath.allocate(*win_keyval); 
+  Winkeyval2Callpath.allocate(*win_keyval, chop); 
   return rc; 
 }
 
@@ -75,7 +75,7 @@ int MPI_Type_create_keyval(
   void *extra_state)
 {
   int rc = PMPI_Type_create_keyval(type_copy_attr_fn, type_delete_attr_fn, type_keyval, extra_state); 
-  Typekeyval2Callpath.allocate(*type_keyval); 
+  Typekeyval2Callpath.allocate(*type_keyval, chop); 
   return rc; 
 }
 
@@ -91,7 +91,7 @@ int MPI_Keyval_free(int *keyval)
   int handle_copy = *keyval; 
   
   int rc = PMPI_Keyval_free(keyval);  
-  Commkeyval2Callpath.free(handle_copy); 
+  Commkeyval2Callpath.free(handle_copy, chop); 
   
   return rc; 
 }
@@ -107,7 +107,7 @@ int MPI_Comm_free_keyval(int *keyval)
   int handle_copy = *keyval; 
   
   int rc = PMPI_Comm_free_keyval(keyval);  
-  Commkeyval2Callpath.free(handle_copy); 
+  Commkeyval2Callpath.free(handle_copy, chop); 
   
   return rc; 
 }
@@ -117,7 +117,7 @@ int MPI_Win_free_keyval(int *keyval)
   int handle_copy = *keyval; 
   
   int rc = PMPI_Win_free_keyval(keyval);  
-  Winkeyval2Callpath.free(handle_copy); 
+  Winkeyval2Callpath.free(handle_copy, chop); 
   
   return rc; 
 }
@@ -127,7 +127,7 @@ int MPI_Type_free_keyval(int *keyval)
   int handle_copy = *keyval; 
   
   int rc = PMPI_Type_free_keyval(keyval);  
-  Typekeyval2Callpath.free(handle_copy); 
+  Typekeyval2Callpath.free(handle_copy, chop); 
   
   return rc; 
 }

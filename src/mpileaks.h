@@ -101,12 +101,12 @@ public:
    * The main functions of this class. Derived classes 
    * that are instantiated use these functions. 
    ******************************************************/
-  void allocate( T &handle ) {
+  void allocate(T &handle, size_t start) {
     if (enabled) {
       if ( !is_handle_null(handle) ) {
 	/* get the call path where this request was allocated,
          * chop layers of mpileaks and internal MPI calls */
-	Callpath path = get_callpath(chop);
+	Callpath path = get_callpath(start+1);
 	
 	/* associate handle with callpath */ 	
 	add_callpath(handle, path); 
@@ -114,18 +114,18 @@ public:
     }
   }
   
-  void free( T &handle ) {
+  void free(T &handle, size_t start) {
     if (enabled) {
       if ( !is_handle_null(handle) ) {
 	/* lookup stack based on handle value */
 	myiterator it = handle2cpc.find(handle);
 	if ( it != handle2cpc.end() )
 	  /* found handle entry, decrease count associated with handle */ 
-	  remove_callpath(it, chop+1); 
+	  remove_callpath(it, start+1); 
 	else {
 	  /* Non-null handle being freed but not found in handle2cpc,
            * capture the callpath of the free call to report later */
-	  Callpath path = get_callpath(chop);
+	  Callpath path = get_callpath(start+1);
 	  
 	  /* increase callpath count for this free call */
 	  increase_count(missing_alloc, path, 1); 

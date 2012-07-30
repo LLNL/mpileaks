@@ -39,7 +39,7 @@ public:
 int MPI_Alloc_mem(MPI_Aint size, MPI_Info info, void *baseptr)
 {
   int rc = PMPI_Alloc_mem(size, info, baseptr); 
-  Mem2Callpath.allocate(*(void**)baseptr); 
+  Mem2Callpath.allocate(*(void**)baseptr, chop); 
   return rc; 
 }
 
@@ -49,7 +49,7 @@ int MPI_Free_mem(void* base)
   void* handle_copy = base; 
   
   int rc = PMPI_Free_mem(base);  
-  Mem2Callpath.free(handle_copy); 
+  Mem2Callpath.free(handle_copy, free); 
   
   return rc; 
 }

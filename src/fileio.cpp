@@ -41,7 +41,7 @@ public:
 int MPI_File_open(MPI_Comm comm, char *filename, int amode, MPI_Info info, MPI_File *fh)
 {
   int rc = PMPI_File_open(comm, filename, amode, info, fh); 
-  File2Callpath.allocate(*fh); 
+  File2Callpath.allocate(*fh, chop); 
   return rc; 
 }
 
@@ -51,7 +51,7 @@ int MPI_File_close(MPI_File *fh)
   MPI_File handle_copy = *fh; 
   
   int rc = PMPI_File_close(fh);  
-  File2Callpath.free(handle_copy); 
+  File2Callpath.free(handle_copy, chop); 
   
   return rc; 
 }

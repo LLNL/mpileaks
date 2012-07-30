@@ -36,56 +36,56 @@ public:
 int MPI_Comm_group(MPI_Comm comm, MPI_Group *group)
 {
   int rc = PMPI_Comm_group(comm, group); 
-  Group2Callpath.allocate(*group); 
+  Group2Callpath.allocate(*group, chop); 
   return rc; 
 }
 
 int MPI_Group_union(MPI_Group group1, MPI_Group group2, MPI_Group *newgroup)
 {
   int rc = PMPI_Group_union(group1, group2, newgroup);
-  Group2Callpath.allocate(*newgroup); 
+  Group2Callpath.allocate(*newgroup, chop); 
   return rc; 
 }
 
 int MPI_Group_intersection(MPI_Group group1, MPI_Group group2, MPI_Group *newgroup)
 {
   int rc = PMPI_Group_intersection(group1, group2, newgroup);
-  Group2Callpath.allocate(*newgroup); 
+  Group2Callpath.allocate(*newgroup, chop); 
   return rc; 
 }
 
 int MPI_Group_difference(MPI_Group group1, MPI_Group group2, MPI_Group *newgroup)
 {
   int rc = PMPI_Group_difference(group1, group2, newgroup);
-  Group2Callpath.allocate(*newgroup); 
+  Group2Callpath.allocate(*newgroup, chop); 
   return rc; 
 }
 
 int MPI_Group_incl(MPI_Group group, int n, int *ranks, MPI_Group *newgroup)
 {
   int rc = PMPI_Group_incl(group, n, ranks, newgroup);
-  Group2Callpath.allocate(*newgroup); 
+  Group2Callpath.allocate(*newgroup, chop); 
   return rc; 
 }
 
 int MPI_Group_excl(MPI_Group group, int n, int *ranks, MPI_Group *newgroup)
 {
   int rc = PMPI_Group_excl(group, n, ranks, newgroup);
-  Group2Callpath.allocate(*newgroup); 
+  Group2Callpath.allocate(*newgroup, chop); 
   return rc; 
 }
 
 int MPI_Group_range_incl(MPI_Group group, int n, int ranges[][3], MPI_Group *newgroup)
 {
   int rc = PMPI_Group_range_incl(group, n, ranges, newgroup);
-  Group2Callpath.allocate(*newgroup); 
+  Group2Callpath.allocate(*newgroup, chop); 
   return rc; 
 }
 
 int MPI_Group_range_excl(MPI_Group group, int n, int ranges[][3], MPI_Group *newgroup)
 {
   int rc = PMPI_Group_range_excl(group, n, ranges, newgroup);
-  Group2Callpath.allocate(*newgroup); 
+  Group2Callpath.allocate(*newgroup, chop); 
   return rc; 
 }
 
@@ -98,21 +98,21 @@ int MPI_Group_range_excl(MPI_Group group, int n, int ranges[][3], MPI_Group *new
 int MPI_Comm_remote_group(MPI_Comm comm, MPI_Group *group)
 {
   int rc = PMPI_Comm_remote_group(comm, group);
-  Group2Callpath.allocate(*group);
+  Group2Callpath.allocate(*group, chop);
   return rc;
 }
 
 int MPI_Win_get_group(MPI_Win win, MPI_Group * group)
 {
   int rc = PMPI_Win_get_group(win, group);
-  Group2Callpath.allocate(*group);
+  Group2Callpath.allocate(*group, chop);
   return rc;
 }
 
 int MPI_File_get_group(MPI_File fh, MPI_Group * group)
 {
   int rc = PMPI_File_get_group(fh, group);
-  Group2Callpath.allocate(*group);
+  Group2Callpath.allocate(*group, chop);
   return rc;
 }
 
@@ -126,7 +126,7 @@ int MPI_Group_free(MPI_Group *group)
 {
   MPI_Group handle_copy = *group; 
   int rc = PMPI_Group_free(group); 
-  Group2Callpath.free(handle_copy); 
+  Group2Callpath.free(handle_copy, chop); 
   return rc; 
   
 }
