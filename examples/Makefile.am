@@ -1,6 +1,7 @@
 examplesdir = $(pkgdatadir)/examples
 dist_examples_DATA = \
-	tests.c
+	tests.c \
+	mpiPing_leaky.f
 
 #EXTRA_DIST = makefile.examples
 #
