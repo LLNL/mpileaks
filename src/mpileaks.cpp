@@ -33,7 +33,7 @@ int depth = 1;
  * this removes functions internal to mpileaks itself, but
  * we allow the caller to override this to remove even more,
  * for example Fortran MPI wrappers that invoke C calls */
-int chop = 1;
+int chop = 2;
 
 CallpathRuntime *runtime = NULL;
 

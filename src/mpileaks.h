@@ -178,7 +178,7 @@ template<class T> class Handle2Set : public Handle2CPC< T, pair<set<Callpath>,in
     if ( it->second.first.empty() || it->second.second <= 0 ) {
       /* handle being freed but no callpaths in set,
        * capture the callpath of the free call to report later */
-      Callpath path = this->get_callpath(start);
+      Callpath path = this->get_callpath(start+1);
       
       /* increase callpath count for this free call */
       this->increase_count(this->missing_alloc, path, 1); 
@@ -363,7 +363,7 @@ template<class T> class Handle2Stack : public Handle2CPC< T, stack<Callpath> >
     } else {
       /* handle being freed without any associated callpaths; 
        * capture the callpath of the free call to report later */
-      Callpath path = this->get_callpath(start);
+      Callpath path = this->get_callpath(start+1);
 
       /* increase callpath count for this free call */
       this->increase_count( this->missing_alloc, path, 1 );
