@@ -1,9 +1,5 @@
 #!/bin/bash
 
-if [ -z "$MPILEAKS_STACK_DEPTH" ] ; then
-  export MPILEAKS_STACK_DEPTH=1
-fi
-
 # for C codes we pop off the 2 deepest layers
 # of the stack which point into mpileaks code,
 # we need to pop one more for fortran codes
