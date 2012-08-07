@@ -53,22 +53,12 @@ The following objects are tracked:
 Building and using mpileaks
 ===================================================================
 
-1. Edit the Makefile to reference the Callpath and Stackwalker
-   install locations:
-   vi src/Makefile
+./configure --prefix=<installdir>
+make
+make install
 
-2. Build the libmpileaks.so library:
-   cd src; make 
-
-3. To build a simple MPI program with leaks:
-   cd examples; make 
-   Note that it is not necessary to link the program with the mpileaks
-   library. Thus, rebuilding an MPI program to use this tool is not
-   necessary, simply replace your 'srun' command with
-   'scripts/srun-mpileaks' (see next step). 
-
-4. To run the example:
-   cd examples; make run
+Just before running, set:
+LD_PRELOAD="<installdir>/lib/libmpileaks.so"
 
 By default, mpileaks reports a single line from the stacktrace,
 but one may increase the number of lines by setting the
