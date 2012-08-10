@@ -53,7 +53,7 @@ The following objects are tracked:
 Building and using mpileaks
 ===================================================================
 
-./configure --prefix=<installdir>
+./configure --prefix=<installdir> --with-callpath=<callpath_installdir>
 make
 make install
 
