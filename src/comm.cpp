@@ -89,10 +89,10 @@ int MPI_Cart_sub(MPI_Comm comm_old, int *remain_dims, MPI_Comm *newcomm)
   return rc;
 }
 
-#if MPI_VERSION > 1
+#if MPI_VERSION >= 2 && MPI_SUBVERSION >= 2
 /************************************************
- * MPI VERSION >1 calls 
- * introduced in MPI-2.0 or later
+ * MPI VERSION >=2.2 calls 
+ * introduced in MPI-2.2 or later
  ************************************************/
 
 int MPI_Dist_graph_create_adjacent(
@@ -124,6 +124,14 @@ int MPI_Dist_graph_create(
   Comm2Callpath.allocate(*comm_dist_graph, chop);
   return rc;
 }
+
+#endif
+
+#if MPI_VERSION > 1
+/************************************************
+ * MPI VERSION >1 calls 
+ * introduced in MPI-2.0 or later
+ ************************************************/
 
 int MPI_Comm_spawn(char *command, char *argv[], int maxprocs, MPI_Info info, int root, MPI_Comm comm, MPI_Comm *intercomm, int array_of_errcodes[])
 {
