@@ -306,7 +306,7 @@ template<class T> class Handle2Callpath : public Handle2CPC<T, Callpath>
     }
   }
 
-  void remove_callpath(myiterator it, int start) {
+  void remove_callpath(myiterator it, size_t start) {
     /* get callpath and update path in callpath2count */ 
     this->decrease_count( callpath2count, it->second, 1 );
 
@@ -350,7 +350,7 @@ template<class T> class Handle2Stack : public Handle2CPC< T, stack<Callpath> >
     this->increase_count( callpath2count, path, 1 ); 
   }
   
-  void remove_callpath(myiterator it, int start) {
+  void remove_callpath(myiterator it, size_t start) {
     if ( !it->second.empty() ) {
       /* pop callpath from stack and update callpath2count */ 
       this->decrease_count( callpath2count, it->second.top(), 1 );
