@@ -49,7 +49,7 @@ int MPI_Free_mem(void* base)
   void* handle_copy = base; 
   
   int rc = PMPI_Free_mem(base);  
-  Mem2Callpath.free(handle_copy, free); 
+  Mem2Callpath.free(handle_copy, chop); 
   
   return rc; 
 }
