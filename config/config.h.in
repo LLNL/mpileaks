@@ -9,6 +9,9 @@
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
+/* Define if adept-utils is available */
+#undef HAVE_LIBADEPTUTILS
+
 /* Define if libcallpath is available */
 #undef HAVE_LIBCALLPATH
 

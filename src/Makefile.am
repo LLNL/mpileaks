@@ -16,7 +16,7 @@ INCLUDES = \
 	$(DEFAULT_INCLUDES) \
 	$(AM_CPPFLAGS) $(CPPFLAGS) \
 	$(AM_CFLAGS) $(CFLAGS) \
-	$(MPI_CFLAGS) $(CALLPATH_CFLAGS)
+	$(MPI_CFLAGS) $(ADEPTUTILS_CFLAGS) $(CALLPATH_CFLAGS)
 
 # source files that are used by scr commands and runtime library
 libmpileaks_la_SOURCES = \
@@ -33,5 +33,5 @@ libmpileaks_la_SOURCES = \
   request.cpp \
   win.cpp
 libmpileaks_la_CFLAGS = $(INCLUDES)
-libmpileaks_la_LIBADD = $(CALLPATH_LDFLAGS) $(CALLPATH_LIBS)
+libmpileaks_la_LIBADD = $(ADEPTUTILS_LDFLAGS) $(ADEPTUTILS_LIBS) $(CALLPATH_LDFLAGS) $(CALLPATH_LIBS)
 libmpileaks_la_LDFLAGS = -avoid-version

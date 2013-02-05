@@ -42,6 +42,7 @@ am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
 	$(top_srcdir)/m4/ltoptions.m4 $(top_srcdir)/m4/ltsugar.m4 \
 	$(top_srcdir)/m4/ltversion.m4 $(top_srcdir)/m4/lt~obsolete.m4 \
 	$(top_srcdir)/m4/lx_find_mpi.m4 \
+	$(top_srcdir)/m4/x_ac_adeptutils.m4 \
 	$(top_srcdir)/m4/x_ac_callpath.m4 \
 	$(top_srcdir)/m4/x_ac_expand_install_dirs.m4 \
 	$(top_srcdir)/m4/x_ac_meta.m4 $(top_srcdir)/configure.ac
@@ -78,6 +79,9 @@ am__installdirs = "$(DESTDIR)$(examplesdir)"
 DATA = $(dist_examples_DATA)
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
+ADEPTUTILS_CFLAGS = @ADEPTUTILS_CFLAGS@
+ADEPTUTILS_LDFLAGS = @ADEPTUTILS_LDFLAGS@
+ADEPTUTILS_LIBS = @ADEPTUTILS_LIBS@
 AMTAR = @AMTAR@
 AR = @AR@
 AUTOCONF = @AUTOCONF@
@@ -223,7 +227,8 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 examplesdir = $(pkgdatadir)/examples
 dist_examples_DATA = \
-	tests.c
+	tests.c \
+	mpiPing_leaky.f
 
 all: all-am
 
