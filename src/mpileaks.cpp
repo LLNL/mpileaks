@@ -27,7 +27,7 @@ using namespace std;
 int enabled = 0;
 
 /* depth=1 shows single line of source code, -1 means entire trace */
-int depth = 1; 
+int depth = -1; 
 
 /* number of lower level routines to chop out of stack trace,
  * this removes functions internal to mpileaks itself, but
@@ -285,9 +285,9 @@ static void mpileaks_reduce_callpaths(list<callpath_count_t> &path_list, const c
     path_list.sort(compare_counts);
 
     if ( !path_list.empty() ) { 
-      cout << "----------------------------------------------------------------------" << endl; 
-      cout << "START SECTION: " << name << endl; 
-      cout << "----------------------------------------------------------------------" << endl; 
+      cout << "----------------------------------------------------------------------" << endl;
+      cout << "START SECTION: " << name << endl;
+      cout << "----------------------------------------------------------------------" << endl;
       /* now print each callpath with its count */
       list<callpath_count_t>::iterator it_list;
       for (it_list = path_list.begin(); it_list != path_list.end(); it_list++) {
@@ -295,9 +295,9 @@ static void mpileaks_reduce_callpaths(list<callpath_count_t> &path_list, const c
 	int count = (*it_list).count;
 	mpileaks_print_path(path, count);
       }
-      cout << "----------------------------------------------------------------------" << endl; 
-      cout << "END SECTION: " << name << endl; 
-      cout << "----------------------------------------------------------------------" << endl; 
+      cout << "----------------------------------------------------------------------" << endl;
+      cout << "END SECTION: " << name << endl;
+      cout << "----------------------------------------------------------------------" << endl;
     }
   }
 }
@@ -310,9 +310,9 @@ static void mpileaks_dump_outstanding()
   list<callpath_count_t> path_list; 
   
   if (myrank == 0) {
-    cout << "----------------------------------------------------------------------" << endl; 
-    cout << "mpileaks: START REPORT -----------------------------------------------" << endl; 
-    cout << "----------------------------------------------------------------------" << endl; 
+    cout << "----------------------------------------------------------------------" << endl;
+    cout << "mpileaks: START REPORT -----------------------------------------------" << endl;
+    cout << "----------------------------------------------------------------------" << endl;
   }
 
   /* Gather all (callpath,count) pairs from all Handle2CPC objects
@@ -340,9 +340,10 @@ static void mpileaks_dump_outstanding()
   
 
   if (myrank == 0) {
-    cout << "----------------------------------------------------------------------" << endl; 
-    cout << "mpileaks: END REPORT -------------------------------------------------" << endl; 
-    cout << "----------------------------------------------------------------------" << endl; 
+    cout << "----------------------------------------------------------------------" << endl;
+    cout << "mpileaks: END REPORT -------------------------------------------------" << endl;
+    cout << "----------------------------------------------------------------------" << endl;
+    cout << flush;
   }
 }
 
@@ -381,7 +382,7 @@ int MPI_Init(int* argc, char** argv[])
 }
 
 
-int MPI_PControl(const int level, ...)
+int MPI_Pcontrol(const int level, ...)
 {
   if (level == 0) {
     enabled = 0;
@@ -391,7 +392,7 @@ int MPI_PControl(const int level, ...)
     mpileaks_dump_outstanding();
   }
   
-  /* TODO: need to call PMPI_PControl here? */
+  /* TODO: need to call PMPI_Pcontrol here? */
   
   return MPI_SUCCESS;
 }
