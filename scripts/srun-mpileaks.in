@@ -1,5 +1,27 @@
 #!/bin/bash
 
-libmpileaks="@X_PREFIX@/lib/libmpileaks.so"
+# print one stack frame when coming through
+# this script, unless user has specified
+# something else
+if [ -z "$MPILEAKS_STACK_DEPTH" ] ; then
+  export MPILEAKS_STACK_DEPTH=1
+fi
+
+# define starting level to report stack trace
+if [ -z "$MPILEAKS_STACK_START" ] ; then
+  export MPILEAKS_STACK_START=@X_MPILEAKS_STACK_START_C@
+fi
+
+# get path to lib directory
+libdir="@X_PREFIX@/lib"
+
+# set LD_LIBRARY_PATH to pick up dependent libs
+if [ -z "$LD_LIBRARY_PATH" ] ; then
+  export LD_LIBRARY_PATH=$libdir
+else
+  export LD_LIBRARY_PATH=${libdir}:${LD_LIBRARY_PATH}
+fi
+
+libmpileaks="${libdir}/libmpileaks.so"
 
 LD_PRELOAD=$libmpileaks srun "$@"
