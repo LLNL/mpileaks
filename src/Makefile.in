@@ -46,7 +46,8 @@ am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
 	$(top_srcdir)/m4/x_ac_adeptutils.m4 \
 	$(top_srcdir)/m4/x_ac_callpath.m4 \
 	$(top_srcdir)/m4/x_ac_expand_install_dirs.m4 \
-	$(top_srcdir)/m4/x_ac_meta.m4 $(top_srcdir)/configure.ac
+	$(top_srcdir)/m4/x_ac_meta.m4 \
+	$(top_srcdir)/m4/x_ac_mpileaks.m4 $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
@@ -195,6 +196,8 @@ X_LIBDIR = @X_LIBDIR@
 X_LIBEXECDIR = @X_LIBEXECDIR@
 X_LOCALSTATEDIR = @X_LOCALSTATEDIR@
 X_MANDIR = @X_MANDIR@
+X_MPILEAKS_STACK_START_C = @X_MPILEAKS_STACK_START_C@
+X_MPILEAKS_STACK_START_FORTRAN = @X_MPILEAKS_STACK_START_FORTRAN@
 X_OLDINCLUDEDIR = @X_OLDINCLUDEDIR@
 X_PREFIX = @X_PREFIX@
 X_SBINDIR = @X_SBINDIR@
