@@ -15,7 +15,7 @@ the total number of objects leaked across all processes for a given
 source code location.  To acquire stack traces, mpileaks internally
 uses Todd Gamblin's Callpath class.
 
-https://github.com/tgamblin/callpath 
+https://github.com/scalability-llnl/callpath
 
 To obtain stack traces, applications must be compiled with the
 '-g' option. However, it is not necessary to link to mpileaks to
@@ -53,18 +53,26 @@ The following objects are tracked:
 Building and using mpileaks
 ===================================================================
 
-./configure --prefix=<installdir> --with-callpath=<callpath_installdir>
-make
-make install
+A basic build and install:
+
+  ./configure \
+    --prefix=<installdir> \
+    --with-adept-utils=<adeptutils_installdir> \
+    --with-callpath=<callpath_installdir>
+  make
+  make install
 
 Just before running, set:
-LD_PRELOAD="<installdir>/lib/libmpileaks.so"
+
+  export LD_PRELOAD="<installdir>/lib/libmpileaks.so"
 
 By default, mpileaks reports a single line from the stacktrace,
 but one may increase the number of lines by setting the
 $MPILEAKS_STACK_DEPTH environment variable.  For example, to
 get two lines:
-  epxort MPILEAKS_STACK_DEPTH=2
+
+  export MPILEAKS_STACK_DEPTH=2
+
 To get the entire stacktrace, set this value to -1.
 
 Also, by default, mpileaks chops off the first 4 function calls
@@ -79,14 +87,31 @@ between the application and the MPI library, one may increase
 this number from 4 to 5 to shave off this single layer so that
 the stack trace begins in application code.
 
+As a convenience, mpileaks installs SLURM srun wrappers.
+It creates an srun-mpileaks wrapper for C and C++ codes and
+another srun-mpileaksf wrapper for Fortran applications.
+These scripts run the application within an environment that
+sets LD_PRELOAD, MPILEAKS_STACK_START, and MPILEAKS_STACK_DEPTH.
+This way, the user simply must replace "srun" with the
+corresponding script to enable mpileaks.
+
+Different systems and different MPI libraries may require
+different values for MPILEAKS_STACK_START.  There are configure
+options to set different values in the srun wrappers.  For example,
+to set MPILEAKS_STACK_START to 4 in srun-mpileaks and to 6 in
+srun-mpileaksf, specify the following during configure:
+
+  --with-stack-start-c=4
+  --with-stack-start-fortran=6
+
 
 ===================================================================
 Extending MPILEAKS to handle other types
 ===================================================================
    
-MPILEAKS is really a framework to detect mismatched function calls. As
-such it can be extended to detect other types of leaks. Using this
-framework is simple: (a) register the handle type used to uniquely
+mpileaks is really a framework to detect mismatched function calls. As
+such it can be extended to detect other types of leaks. To use this
+framework, one must: (a) register the handle type used to uniquely
 identify the function calls of interest; and (b) use the provided
 functions 'allocate' and 'free' to associate a function call as
 allocating or freeing resources. We provide an example below that,
